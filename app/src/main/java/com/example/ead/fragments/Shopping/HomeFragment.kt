@@ -136,6 +136,12 @@ class HomeFragment : Fragment() {
                 if (product.name.contains(query, ignoreCase = true)) {
                     filteredProductList.add(product)
                 }
+
+                if (product.vendorId.contains(query, ignoreCase = true)) {
+                    filteredProductList.add(product)
+                }
+
+
             }
         }
         productAdapter.notifyDataSetChanged()
@@ -214,3 +220,4 @@ class HomeFragment : Fragment() {
         })
     }
 }
+

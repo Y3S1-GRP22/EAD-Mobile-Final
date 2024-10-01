@@ -25,13 +25,32 @@
             android:layout_height="wrap_content"
             android:paddingTop="8dp"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            style="@style/h3"/>
 
         <TextView
             android:id="@+id/textViewProductPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            style="@style/h2"/>
+
+        <TextView
+            android:id="@+id/textViewProductVendor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+
+            style="@style/h2"/>
+
+        <TextView
+            android:id="@+id/textViewProductRating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            style="@style/h2"/>
+
+
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

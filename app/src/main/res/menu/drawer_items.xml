@@ -29,10 +29,7 @@
             android:id="@+id/navMyComments"
             android:icon="@drawable/comment"
             android:title="My Comments" />
-        <item
-            android:id="@+id/navCategories"
-            android:icon="@drawable/category"
-            android:title="Categories" />
+
     </group>
 
     <group

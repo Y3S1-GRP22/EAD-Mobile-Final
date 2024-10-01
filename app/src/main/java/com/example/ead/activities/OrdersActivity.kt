@@ -1,104 +1,80 @@
 package com.example.ead.activities
 
-
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.ead.R
-import com.example.ead.fragments.Shopping.CanceledOrderFragment
-import com.example.ead.fragments.Shopping.CompletedOrderFragment
-import com.example.ead.fragments.Shopping.PendingOrderFragment
+import com.example.ead.adapters.OrderAdapter
+import com.example.ead.models.Order
 
 class OrdersActivity : AppCompatActivity() {
 
     private lateinit var buttonBack: ImageButton
+    private lateinit var orderRecyclerView: RecyclerView
+    private lateinit var orderAdapter: OrderAdapter
+    private lateinit var orderList: MutableList<Order>
+    private lateinit var spinnerOrderStatus: Spinner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_orders)
 
+        // Initialize views
         buttonBack = findViewById(R.id.buttonBack)
+        orderRecyclerView = findViewById(R.id.orderRecyclerView)
+        spinnerOrderStatus = findViewById(R.id.spinnerOrderStatus)
+
         // Set click listener for the back button
         buttonBack.setOnClickListener { onBackPressed() }
 
-        val linearNavbarItem1 = findViewById<LinearLayout>(R.id.linearNavbarItem1)
-        val linearNavbarItem2 = findViewById<LinearLayout>(R.id.linearNavbarItem2)
-        val linearNavbarItem3 = findViewById<LinearLayout>(R.id.linearNavbarItem3)
+        // Set up RecyclerView
+        orderRecyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Set default fragment
-        if (savedInstanceState == null) {
-            setFragment(PendingOrderFragment())
-            updateUIForActiveFragment(1) // Active fragment is Pending
-        }
+        // Create a list of sample orders
+        orderList = mutableListOf(
+            Order("ORD001", "Product A, Product B", "$50", "Pending"),
+            Order("ORD002", "Product C, Product D", "$75", "Completed"),
+            Order("ORD003", "Product E", "$25", "Canceled"),
+            Order("ORD004", "Product F", "$30", "Dispatched")
+        )
 
-        // Set up click listeners for the navigation items
-        linearNavbarItem1.setOnClickListener {
-            setFragment(PendingOrderFragment())
-            updateUIForActiveFragment(1)
-        }
+        // Set up the adapter with the full order list
+        orderAdapter = OrderAdapter(orderList)
+        orderRecyclerView.adapter = orderAdapter
 
-        linearNavbarItem2.setOnClickListener {
-            setFragment(CompletedOrderFragment())
-            updateUIForActiveFragment(2)
-        }
-
-        linearNavbarItem3.setOnClickListener {
-            setFragment(CanceledOrderFragment())
-            updateUIForActiveFragment(3)
-        }
-    }
-
-    private fun setFragment(fragment: Fragment) {
-        val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
-        transaction.replace(R.id.cusTransactionMethodFragmentContainer, fragment)
-        transaction.commit()
-    }
-
-    private fun updateUIForActiveFragment(activeFragment: Int) {
-        // Reset all fragment views
-        resetFragmentViews()
-
-        // Update the active fragment's UI
-        when (activeFragment) {
-            1 -> {
-                findViewById<ImageView>(R.id.imageFolder1).setImageResource(R.drawable.pending_on)
-                findViewById<TextView>(R.id.txtMyparcels).setTextColor(resources.getColor(R.color.ordersOnTextColor))
+        // Add listener to the spinner to filter the orders based on status
+        spinnerOrderStatus.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedStatus = parent.getItemAtPosition(position).toString()
+                filterOrdersByStatus(selectedStatus)
             }
-            2 -> {
-                findViewById<ImageView>(R.id.imageFolder2).setImageResource(R.drawable.completed_on)
-                findViewById<TextView>(R.id.txtHome).setTextColor(resources.getColor(R.color.ordersOnTextColor))
-            }
-            3 -> {
-                findViewById<ImageView>(R.id.imageFolder3).setImageResource(R.drawable.cancel_on)
-                findViewById<TextView>(R.id.txtMyDeliveries).setTextColor(resources.getColor(R.color.ordersOnTextColor))
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // Do nothing
             }
         }
     }
 
-    private fun resetFragmentViews() {
-        // Reset Pending
-        findViewById<ImageView>(R.id.imageFolder1).setImageResource(R.drawable.pending)
-        findViewById<TextView>(R.id.txtMyparcels).setTextColor(resources.getColor(R.color.ordersTextColor))
+    private fun filterOrdersByStatus(status: String) {
+        val filteredOrders = if (status == "All") {
+            orderList // Show all orders if 'All' is selected
+        } else {
+            orderList.filter { it.status == status }
+        }
 
-        // Reset Completed
-        findViewById<ImageView>(R.id.imageFolder2).setImageResource(R.drawable.completed)
-        findViewById<TextView>(R.id.txtHome).setTextColor(resources.getColor(R.color.ordersTextColor))
-
-        // Reset Canceled
-        findViewById<ImageView>(R.id.imageFolder3).setImageResource(R.drawable.cancel)
-        findViewById<TextView>(R.id.txtMyDeliveries).setTextColor(resources.getColor(R.color.ordersTextColor))
+        // Update the adapter with the filtered list
+        orderAdapter.updateOrderList(filteredOrders.toMutableList())
     }
 
     override fun onBackPressed() {
         Log.d("TAG", "Debug message")
         // Check if the fragment manager has a back stack
-        super.onBackPressed()
         if (supportFragmentManager.backStackEntryCount > 0) {
             Log.d("TAG", "If Debug message")
             supportFragmentManager.popBackStack() // Go back to previous fragment

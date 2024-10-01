@@ -1,6 +1,7 @@
 package com.example.ead.activities
 
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
@@ -108,18 +109,23 @@ class Main : AppCompatActivity() {
                     val intent = Intent(this, CommentsActivity::class.java)
                     startActivity(intent)
                 }
-                R.id.navCategories -> {
-                    // Launch CategoriesActivity
-                    val intent = Intent(this, CategoriesActivity::class.java)
-                    startActivity(intent)
-                }
+
                 R.id.navLogout -> {
                     // Handle logout
+
+                    // Remove user_prefs from SharedPreferences
+                    val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+                    val editor = sharedPreferences.edit()
+                    editor.clear()  // Clears all the saved data
+                    editor.apply()  // Apply changes
+
+                    // Start the LoginRegisterActivity
                     val intent = Intent(this, LoginRegisterActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()
                 }
+
             }
 
             drawerLayout.close()  // Close the drawer after selection

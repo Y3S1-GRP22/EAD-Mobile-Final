@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,6 +30,7 @@ class CommentsActivity : AppCompatActivity() {
     private lateinit var commentAdapter: CommentAdapter
     private lateinit var commentsList: MutableList<Comment>
     val baseUrl = GlobalVariable.BASE_URL
+    private lateinit var buttonBack : ImageView
 
     private val client = OkHttpClient() // OkHttp client instance
 
@@ -39,6 +41,10 @@ class CommentsActivity : AppCompatActivity() {
         // Initialize RecyclerView
         commentRecyclerView = findViewById(R.id.commentRecyclerView)
         commentRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        buttonBack = findViewById(R.id.buttonBack)
+        buttonBack.setOnClickListener { onBackPressed() }
+
 
         // Fetch comments from API
         getCustomerId()?.let { fetchCommentsFromApi(it) }
