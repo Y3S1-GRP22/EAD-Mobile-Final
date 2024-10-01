@@ -192,7 +192,7 @@ class ProductDetailActivity : AppCompatActivity() {
             }
 
             // Create the comment object
-            val commentData = Comment(userId, productId, vendorId, rating.toInt(), comment)
+            val commentData = Comment("",userId, productId, vendorId, rating.toInt(), comment)
 
             // Send the comment data to the server
             submitComment(commentData)

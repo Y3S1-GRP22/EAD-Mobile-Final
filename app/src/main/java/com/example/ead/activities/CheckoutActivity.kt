@@ -1,5 +1,6 @@
 package com.example.ead.activities
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +35,8 @@ class CheckoutActivity : AppCompatActivity() {
     private lateinit var subtotalAmountTextView: TextView
     private lateinit var deliveryFeeAmountTextView: TextView
     val baseUrl = GlobalVariable.BASE_URL
+    private lateinit var buttonCart: ImageButton
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +52,12 @@ class CheckoutActivity : AppCompatActivity() {
         addressTextView = findViewById(R.id.userAddressTextView)
         subtotalAmountTextView = findViewById(R.id.subtotalAmountTextView)
         deliveryFeeAmountTextView = findViewById(R.id.deliveryFeeAmountTextView)
+
+        buttonCart = findViewById(R.id.buttonCart)
+
+        buttonCart.setOnClickListener {
+            startActivity(Intent(this, CartActivity::class.java))
+        }
 
         val sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
         val username = sharedPreferences.getString("customer_name", "User Name")
