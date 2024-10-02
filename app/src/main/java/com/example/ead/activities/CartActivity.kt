@@ -36,6 +36,7 @@ class CartActivity : AppCompatActivity() {
     private lateinit var buttonBack: ImageButton
     private lateinit var cartItems: MutableList<CartItem>
     val baseUrl = GlobalVariable.BASE_URL
+    private var cartId: String? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,17 +65,27 @@ class CartActivity : AppCompatActivity() {
             // Call the method to clear the cart
             clearCartItemsFromServer()
         }
+
         checkoutButton.setOnClickListener {
-            val intent = Intent(this, CheckoutActivity::class.java)
-            val totalAmount = calculateTotal() // Get the total amount
-            intent.putExtra("total_amount", totalAmount) // Pass total amount to the next activity
-            startActivity(intent)
+            // Pass cart ID and total amount to CheckoutActivity
+            if (cartId != null) {
+                val intent = Intent(this, CheckoutActivity::class.java)
+                val totalAmount = calculateTotal()
+                intent.putExtra("total_amount", totalAmount)
+                intent.putExtra("cart_id", cartId) // Pass the cart ID
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Cart ID not available", Toast.LENGTH_SHORT).show()
+            }
         }
 
 
         // Fetch cart details
         fetchCartDetails()
     }
+
+
+
 
     // Method to clear cart from server
     private fun clearCartItemsFromServer() {
@@ -128,7 +139,6 @@ class CartActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             val userId = getCustomerId() // Replace with the actual cart ID
             val url = "$baseUrl/cart/$userId"
-            println("url is" + url)
             val client = OkHttpClient()
             val request = Request.Builder().url(url).build()
             updateTotalAmount()
@@ -140,6 +150,7 @@ class CartActivity : AppCompatActivity() {
                     responseData?.let {
                         val cartResponse = Gson().fromJson(it, CartResponse::class.java)
                         withContext(Dispatchers.Main) {
+                            cartId = cartResponse.id
                             // Update cartItems and notify the adapter
                             cartItems.clear()
                             cartItems.addAll(cartResponse.items)

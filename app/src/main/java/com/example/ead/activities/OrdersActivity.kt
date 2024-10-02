@@ -37,12 +37,12 @@ class OrdersActivity : AppCompatActivity() {
         orderRecyclerView.layoutManager = LinearLayoutManager(this)
 
         // Create a list of sample orders
-        orderList = mutableListOf(
-            Order("ORD001", "Product A, Product B", "$50", "Pending"),
-            Order("ORD002", "Product C, Product D", "$75", "Completed"),
-            Order("ORD003", "Product E", "$25", "Canceled"),
-            Order("ORD004", "Product F", "$30", "Dispatched")
-        )
+//        orderList = mutableListOf(
+//            Order("ORD001", "Product A, Product B", "$50", "Pending"),
+//            Order("ORD002", "Product C, Product D", "$75", "Completed"),
+//            Order("ORD003", "Product E", "$25", "Canceled"),
+//            Order("ORD004", "Product F", "$30", "Dispatched")
+//        )
 
         // Set up the adapter with the full order list
         orderAdapter = OrderAdapter(orderList)

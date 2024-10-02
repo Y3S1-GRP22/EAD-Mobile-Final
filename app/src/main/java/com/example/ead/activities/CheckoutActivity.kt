@@ -2,26 +2,38 @@ package com.example.ead.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import com.example.ead.GlobalVariable
 import com.example.ead.R
 import com.example.ead.adapters.CheckoutAdapter
 import com.example.ead.models.CartItem
+import com.example.ead.models.Order
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class CheckoutActivity : AppCompatActivity() {
     private lateinit var cartRecyclerView: RecyclerView
@@ -31,11 +43,16 @@ class CheckoutActivity : AppCompatActivity() {
     private lateinit var buttonBack: ImageButton
     private var cartItems: MutableList<CartItem> = mutableListOf()
     private lateinit var usernameTextView: TextView
-    private lateinit var addressTextView: TextView
+    private lateinit var addressEditText: EditText
     private lateinit var subtotalAmountTextView: TextView
     private lateinit var deliveryFeeAmountTextView: TextView
     val baseUrl = GlobalVariable.BASE_URL
     private lateinit var buttonCart: ImageButton
+    private lateinit var notesEditText : EditText
+    private lateinit var paymentOptionsGroup: RadioGroup
+    private lateinit var radioCOD: RadioButton
+    private lateinit var radioVisa: RadioButton
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,11 +66,16 @@ class CheckoutActivity : AppCompatActivity() {
         totalAmountTextView = findViewById(R.id.totalAmountTextView)
         payNowButton = findViewById(R.id.payNowButton)
         usernameTextView = findViewById(R.id.userNameTextView)
-        addressTextView = findViewById(R.id.userAddressTextView)
+        addressEditText = findViewById(R.id.userAddressEditText)
         subtotalAmountTextView = findViewById(R.id.subtotalAmountTextView)
         deliveryFeeAmountTextView = findViewById(R.id.deliveryFeeAmountTextView)
+        notesEditText = findViewById(R.id.notesEditText)
 
         buttonCart = findViewById(R.id.buttonCart)
+
+        paymentOptionsGroup = findViewById(R.id.paymentOptionsGroup)
+        radioCOD = findViewById(R.id.radioCOD)
+        radioVisa = findViewById(R.id.radioVisa)
 
         buttonCart.setOnClickListener {
             startActivity(Intent(this, CartActivity::class.java))
@@ -65,7 +87,10 @@ class CheckoutActivity : AppCompatActivity() {
         val userId = sharedPreferences.getString("customer_id", null)
 
         usernameTextView.text = username
-        addressTextView.text = address
+        address?.let {
+            addressEditText.text = Editable.Factory.getInstance().newEditable(it)
+        }
+
 
         cartRecyclerView.layoutManager = LinearLayoutManager(this)
         checkoutAdapter = CheckoutAdapter(cartItems)
@@ -75,10 +100,7 @@ class CheckoutActivity : AppCompatActivity() {
             fetchCartItems(userId)
         }
 
-        // Set up checkout button listener
-        payNowButton.setOnClickListener {
-            // Handle checkout logic here
-        }
+        val cartId = intent.getStringExtra("cart_id")
 
         deliveryFeeAmountTextView.text = String.format("$5.00")
 
@@ -86,7 +108,150 @@ class CheckoutActivity : AppCompatActivity() {
         val total = subtotal + 5
         totalAmountTextView.text = String.format("$$total")
 
+// Set up checkout button listener
+        payNowButton.setOnClickListener {
+            // Get user inputs
+            val userId = sharedPreferences.getString("customer_id", null) ?: ""
+            val totalPrice = calculateTotal()
+            val shippingAddress = addressEditText.text.toString()
+            val notes = notesEditText.text.toString()
+
+            // Check if a payment option is selected
+            val selectedRadioButtonId = paymentOptionsGroup.checkedRadioButtonId
+            if (selectedRadioButtonId == -1) { // No radio button is selected
+                Toast.makeText(
+                    this@CheckoutActivity,
+                    "Please select a payment option",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener // Exit the click listener
+            }
+
+            // Get payment status from the selected radio button
+            val paymentStatus = when (selectedRadioButtonId) {
+                R.id.radioCOD -> "COD" // Assuming "Paid" for COD
+                R.id.radioVisa -> "Visa" // Assuming "Paid" for Visa
+                else -> "Unpaid" // Fallback case
+            }
+
+            val orderDate = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+
+            // Create an Order object
+            val order = Order(
+                customerId = userId,
+                cart = cartId ?: "",
+                totalPrice = total,
+                shippingAddress = shippingAddress,
+                orderDate = orderDate, // Example date, replace with actual date if needed
+                paymentStatus = paymentStatus,
+                notes = notes
+            )
+
+            createOrder(order)
+        }
     }
+
+
+    private fun createOrder(order: Order) {
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+
+                val jsonOrder = Gson().toJson(order)
+
+
+                val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonOrder)
+
+                val request = Request.Builder()
+                    .url("$baseUrl/order/create")
+                    .post(requestBody)
+                    .build()
+
+                val client = OkHttpClient()
+
+                val response = client.newCall(request).execute()
+
+                val cartId = intent.getStringExtra("cart_id")
+                val sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE)
+
+                val userId = sharedPreferences.getString("customer_id", null)
+
+
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@CheckoutActivity, "Order placed successfully!", Toast.LENGTH_SHORT).show()
+                        // Optionally, navigate to a different screen or update UI
+                    }
+
+                    // Now update the cart status to false
+                    order.cart?.let {
+                        if (userId != null) {
+                            if (cartId != null) {
+                                updateCartStatus(userId, cartId)
+                            }
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@CheckoutActivity, "Failed to place order", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.e("CheckoutActivity", "Error creating order: ${e.message}")
+                    Toast.makeText(this@CheckoutActivity, "Error creating order", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+}
+
+    // Method to update cart status
+    private fun updateCartStatus(userId: String, cartId: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+
+
+                val request = Request.Builder()
+                    .url("$baseUrl/cart/$userId/status/$cartId")
+                    .put(RequestBody.create(null, ByteArray(0)))  // Empty body
+                    .build()
+
+
+
+
+                val client = OkHttpClient()
+
+                val response = client.newCall(request).execute()
+
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            this@CheckoutActivity,
+                            "Failed to update cart status",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.e("CheckoutActivity", "Error updating cart status: ${e.message}")
+                    Toast.makeText(
+                        this@CheckoutActivity,
+                        "Error updating cart status",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+
+        }}
 
     // Method to fetch cart items from the API
     private fun fetchCartItems(userId: String) {

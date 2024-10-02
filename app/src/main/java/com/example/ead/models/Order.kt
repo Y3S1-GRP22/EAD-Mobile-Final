@@ -1,8 +1,16 @@
 package com.example.ead.models
 
+
 data class Order(
-    val orderNumber: String,
-    val products: String,  // List of Product objects
-    val totalAmount: String,
-    val status: String
+    val id: String? = null,
+    val customerId: String,
+    val cart: String,
+    val vendorId: String? = null,
+    val totalPrice: Double,
+    val shippingAddress: String,
+    val orderDate: String,
+    val status: String = "Processing", // Default status
+    val paymentStatus: String,
+    val notes: String
 )
+

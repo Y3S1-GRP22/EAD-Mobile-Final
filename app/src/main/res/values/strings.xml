@@ -25,7 +25,7 @@
 
     <string-array name="order_status">
         <item>All</item>
-        <item>Pending</item>
+        <item>Processing</item>
         <item>Completed</item>
         <item>Cancelled</item>
         <item>Dispatched</item>

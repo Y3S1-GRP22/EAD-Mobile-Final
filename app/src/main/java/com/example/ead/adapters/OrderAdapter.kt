@@ -33,9 +33,9 @@ class OrderAdapter(private var orderList: List<Order>) :
     // Binding data to the ViewHolder for each item
     override fun onBindViewHolder(holder: OrderViewHolder, position: Int) {
         val order = orderList[position]
-        holder.orderNumberTextView.text = order.orderNumber
-        holder.productsTextView.text = order.products
-        holder.totalAmountTextView.text = order.totalAmount
+        holder.orderNumberTextView.text = order.id
+        holder.productsTextView.text = order.cart
+        holder.totalAmountTextView.text = order.totalPrice.toString()
         holder.statusTextView.text = order.status
 
         // Hide edit and delete buttons if the status is "Dispatched"
