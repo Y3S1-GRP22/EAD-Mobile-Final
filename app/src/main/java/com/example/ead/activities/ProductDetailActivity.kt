@@ -251,6 +251,8 @@ class ProductDetailActivity : AppCompatActivity() {
                     if (response.isSuccessful) {
                         Toast.makeText(this@ProductDetailActivity, "Review added successfully", Toast.LENGTH_SHORT).show()
                         val responseData = response.body?.string()
+                        val intent = Intent(this@ProductDetailActivity, CommentsActivity::class.java)
+                        startActivity(intent)
                         Log.d("ProductDetailActivity", "Response: $responseData")
                     } else {
                         Toast.makeText(this@ProductDetailActivity, "Failed to add review", Toast.LENGTH_SHORT).show()

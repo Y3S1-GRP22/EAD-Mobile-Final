@@ -318,18 +318,6 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun removeImage() {
-        if (originalDrawable != null) {
-            cusAccountProfileImage.setImageDrawable(originalDrawable)
-            selectedImageUri = null
-        } else {
-            cusAccountProfileImage.setImageResource(R.drawable.person)
-        }
-    }
-
-
-
     override fun onBackPressed() {
         Log.d("TAG", "Debug message")
         if (supportFragmentManager.backStackEntryCount > 0) {

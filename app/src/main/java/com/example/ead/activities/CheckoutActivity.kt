@@ -17,6 +17,7 @@ import android.widget.Toast
 import com.example.ead.GlobalVariable
 import com.example.ead.R
 import com.example.ead.adapters.CheckoutAdapter
+import com.example.ead.fragments.HomeFragment
 import com.example.ead.models.CartItem
 import com.example.ead.models.Order
 import com.google.gson.Gson
@@ -183,6 +184,7 @@ class CheckoutActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@CheckoutActivity, "Order placed successfully!", Toast.LENGTH_SHORT).show()
                         // Optionally, navigate to a different screen or update UI
+
                     }
 
                     // Now update the cart status to false
@@ -193,6 +195,9 @@ class CheckoutActivity : AppCompatActivity() {
                             }
                         }
                     }
+
+                    val intent = Intent(this@CheckoutActivity, OrdersActivity::class.java)
+                    startActivity(intent)
                 } else {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@CheckoutActivity, "Failed to place order", Toast.LENGTH_SHORT).show()

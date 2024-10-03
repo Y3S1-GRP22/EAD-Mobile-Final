@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.ead.GlobalVariable
 import com.example.ead.R
 import com.example.ead.activities.CartActivity
+import com.example.ead.activities.CartActivity1
 import com.example.ead.models.CartItem
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
@@ -26,11 +27,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 
-class CartAdapter(
+class CartAdapter1(
     private var cartItems: MutableList<CartItem>,
     private val context: Context,
-    private val activity: CartActivity// Add this line
-) : RecyclerView.Adapter<CartAdapter.CartViewHolder>() {
+    private val activity: CartActivity1// Add this line
+) : RecyclerView.Adapter<CartAdapter1.CartViewHolder>() {
 
     val baseUrl = GlobalVariable.BASE_URL
 
@@ -95,7 +96,7 @@ class CartAdapter(
             }
         }
 
-      
+
     }
 
     private fun updateCartItemQuantity(userId: String, itemId: String?, quantity: Int) {
@@ -194,8 +195,8 @@ class CartAdapter(
             }
         }
     }
-    
-    
+
+
 
 
 

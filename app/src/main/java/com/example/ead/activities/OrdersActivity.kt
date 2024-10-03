@@ -1,5 +1,6 @@
 package com.example.ead.activities
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -9,9 +10,21 @@ import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.ead.GlobalVariable
 import com.example.ead.R
 import com.example.ead.adapters.OrderAdapter
 import com.example.ead.models.Order
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
+
+val baseUrl = GlobalVariable.BASE_URL
 
 class OrdersActivity : AppCompatActivity() {
 
@@ -19,7 +32,9 @@ class OrdersActivity : AppCompatActivity() {
     private lateinit var orderRecyclerView: RecyclerView
     private lateinit var orderAdapter: OrderAdapter
     private lateinit var orderList: MutableList<Order>
+    private lateinit var filteredOrderList: MutableList<Order> // To store filtered orders
     private lateinit var spinnerOrderStatus: Spinner
+    private lateinit var client: OkHttpClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,40 +51,121 @@ class OrdersActivity : AppCompatActivity() {
         // Set up RecyclerView
         orderRecyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Create a list of sample orders
-//        orderList = mutableListOf(
-//            Order("ORD001", "Product A, Product B", "$50", "Pending"),
-//            Order("ORD002", "Product C, Product D", "$75", "Completed"),
-//            Order("ORD003", "Product E", "$25", "Canceled"),
-//            Order("ORD004", "Product F", "$30", "Dispatched")
-//        )
+        // Initialize OkHttpClient
+        client = OkHttpClient()
 
-        // Set up the adapter with the full order list
-        orderAdapter = OrderAdapter(orderList)
-        orderRecyclerView.adapter = orderAdapter
+        // Fetch orders
+        fetchOrders()
+        println("navigated to order activity")
 
-        // Add listener to the spinner to filter the orders based on status
+        // Set up Spinner listener
         spinnerOrderStatus.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                val selectedStatus = parent.getItemAtPosition(position).toString()
-                filterOrdersByStatus(selectedStatus)
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (::orderList.isInitialized) { // Check if orderList is initialized
+                    val selectedStatus = parent?.getItemAtPosition(position).toString()
+                    filterOrders(selectedStatus) // Call filterOrders when initialized
+                } else {
+                    Log.e("OrdersActivity", "Order list is not initialized yet.")
+                }
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>) {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
                 // Do nothing
             }
         }
     }
 
-    private fun filterOrdersByStatus(status: String) {
-        val filteredOrders = if (status == "All") {
-            orderList // Show all orders if 'All' is selected
+    private fun fetchOrders() {
+        println("called fetch orders")
+        orderList = mutableListOf()  // Initialize orderList before adding elements
+
+        CoroutineScope(Dispatchers.IO).launch {
+            println("Called url")
+            try {
+                val userId = getCustomerId()
+                if (userId != null) {
+                    // Fetch orders for the customer
+                    val ordersUrl = "$baseUrl/order/customer/$userId"
+                    val ordersResponse = makeGetRequest(ordersUrl)
+                    val ordersJsonArray = JSONArray(ordersResponse)
+
+                    // Loop through each order
+                    for (i in 0 until ordersJsonArray.length()) {
+                        val orderJson = ordersJsonArray.getJSONObject(i)
+                        val cartId = orderJson.getString("cart")
+                        val totalPrice = orderJson.getDouble("totalPrice")
+                        val status = orderJson.getString("status")
+                        val products = fetchCartItems(cartId)
+                        val shippingAddress = orderJson.getString("shippingAddress")
+                        val customerId = orderJson.getString("customerId")
+                        val vendorId = orderJson.getString("vendorId")
+                        val orderDate = orderJson.getString("orderDate")
+                        val paymentStatus = orderJson.getString("paymentStatus")
+                        val notes = orderJson.getString("notes")
+
+
+
+                        // Create an Order object and add it to the list
+                        orderList.add(Order(orderJson.getString("id"), customerId, products.joinToString(", "), cartId, totalPrice, shippingAddress, orderDate, status, paymentStatus, notes))
+                    }
+
+                    // Set up the adapter with the fetched order list
+                    withContext(Dispatchers.Main) {
+                        orderAdapter = OrderAdapter(orderList, this@OrdersActivity) // Pass the context here
+                        orderRecyclerView.adapter = orderAdapter
+                        Log.i("OrdersActivity fetched", "User ID found")
+                    }
+
+                } else {
+                    Log.e("OrdersActivity", "User ID not found.")
+                }
+            } catch (e: Exception) {
+                Log.e("OrdersActivity", "Error fetching orders: ${e.message}")
+            }
+        }
+    }
+
+    // Filter orders based on selected status
+    private fun filterOrders(status: String) {
+        filteredOrderList = if (status == "All") {
+            orderList // Show all orders if "All" is selected
         } else {
-            orderList.filter { it.status == status }
+            orderList.filter { it.status == status }.toMutableList() // Filter by status
         }
 
-        // Update the adapter with the filtered list
-        orderAdapter.updateOrderList(filteredOrders.toMutableList())
+        // Update RecyclerView with the filtered list
+        orderAdapter = OrderAdapter(filteredOrderList, this)
+        orderRecyclerView.adapter = orderAdapter
+    }
+
+    private fun fetchCartItems(cartId: String): List<String> {
+        val products = mutableListOf<String>()
+        val cartUrl = "$baseUrl/cart/cart/$cartId"
+
+        try {
+            // Fetch cart details
+            val cartResponse = makeGetRequest(cartUrl)
+            val cartJson = JSONObject(cartResponse)
+            val itemsArray = cartJson.getJSONArray("items")
+
+            // Loop through each item and get product names
+            for (j in 0 until itemsArray.length()) {
+                val itemJson = itemsArray.getJSONObject(j)
+                val productName = itemJson.getString("productName")
+                products.add(productName)
+            }
+        } catch (e: Exception) {
+            Log.e("OrdersActivity", "Error fetching cart items: ${e.message}")
+        }
+        return products
+    }
+
+    private fun makeGetRequest(url: String): String {
+        val request = Request.Builder().url(url).build()
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+            return response.body?.string() ?: ""
+        }
     }
 
     override fun onBackPressed() {
@@ -82,5 +178,10 @@ class OrdersActivity : AppCompatActivity() {
             Log.d("TAG", "Else Debug message")
             finish() // Close activity if no fragments are in the stack
         }
+    }
+
+    private fun getCustomerId(): String? {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("customer_id", null)
     }
 }

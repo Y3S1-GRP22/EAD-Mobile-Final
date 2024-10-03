@@ -9,7 +9,7 @@ data class Order(
     val totalPrice: Double,
     val shippingAddress: String,
     val orderDate: String,
-    val status: String = "Processing", // Default status
+    var status: String = "Processing", // Default status
     val paymentStatus: String,
     val notes: String
 )

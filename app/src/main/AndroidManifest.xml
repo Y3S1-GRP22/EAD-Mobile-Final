@@ -20,6 +20,10 @@
         <activity
             android:name=".activities.CheckoutActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".activities.CartActivity1"
+            android:exported="false" />
         <activity
             android:name=".activities.OrdersActivity"
             android:exported="false" />

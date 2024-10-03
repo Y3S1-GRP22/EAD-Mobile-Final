@@ -1,6 +1,7 @@
 package com.example.ead.activities
 
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -16,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.ead.GlobalVariable
 import com.example.ead.R
 import com.example.ead.adapters.CartAdapter
+import com.example.ead.adapters.CartAdapter1
 import com.example.ead.models.CartItem
 import com.example.ead.models.CartResponse // Create this model class
 import com.google.gson.Gson
@@ -27,130 +29,79 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 
-class CartActivity : AppCompatActivity() {
+class CartActivity1 : AppCompatActivity() {
     private lateinit var cartRecyclerView: RecyclerView
-    private lateinit var cartAdapter: CartAdapter
+    private lateinit var cartAdapter: CartAdapter1
     private lateinit var totalAmountTextView: TextView
-    private lateinit var clearCart: TextView
     private lateinit var checkoutButton: Button
     private lateinit var buttonBack: ImageButton
     private lateinit var cartItems: MutableList<CartItem>
     val baseUrl = GlobalVariable.BASE_URL
-    private var cartId: String? = null
 
 
+
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_cart)
+        setContentView(R.layout.activity_cart1)
+
+        // Initialize cartId here
+        var cartId = intent.getStringExtra("cartId")
+
+        if (cartId == null) {
+            Toast.makeText(this, "Cart ID is missing", Toast.LENGTH_SHORT).show()
+            // Optionally finish the activity if the cart ID is critical
+            finish()
+            return
+        }
 
         // Initialize views
         cartRecyclerView = findViewById(R.id.cartRecyclerView)
         totalAmountTextView = findViewById(R.id.totalAmountTextView)
         checkoutButton = findViewById(R.id.checkoutButton)
-        clearCart = findViewById(R.id.clearCart)
         buttonBack = findViewById(R.id.buttonBack)
 
         // Set up RecyclerView
         cartItems = mutableListOf()
-        cartAdapter = CartAdapter(cartItems,this,this)
+        cartAdapter = CartAdapter1(cartItems, this, this)
         cartRecyclerView.layoutManager = LinearLayoutManager(this)
         cartRecyclerView.adapter = cartAdapter
 
         updateTotalAmount()
 
-
         // Set click listeners
         buttonBack.setOnClickListener { onBackPressed() }
-        clearCart.setOnClickListener {
-            // Call the method to clear the cart
-            clearCartItemsFromServer()
-        }
 
         checkoutButton.setOnClickListener {
             // Pass cart ID and total amount to CheckoutActivity
-            if (cartId != null) {
-                val intent = Intent(this, CheckoutActivity::class.java)
-                val totalAmount = calculateTotal()
-                intent.putExtra("total_amount", totalAmount)
-                intent.putExtra("cart_id", cartId) // Pass the cart ID
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "Cart ID not available", Toast.LENGTH_SHORT).show()
-            }
+            val totalAmount = calculateTotal()
+            val intent = Intent(this, CheckoutActivity::class.java)
+            intent.putExtra("total_amount", totalAmount)
+            intent.putExtra("cart_id", cartId) // Pass the cart ID
+            startActivity(intent)
         }
-
 
         // Fetch cart details
-        fetchCartDetails()
+        fetchCartDetails(cartId)
     }
 
 
-
-
-    // Method to clear cart from server
-    private fun clearCartItemsFromServer() {
+    private fun fetchCartDetails(cartId : String) {
+        println("called fetch cart details"+cartId)
         CoroutineScope(Dispatchers.IO).launch {
-            val userId = getCustomerId() // Get the userId from SharedPreferences
-            if (userId == null) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CartActivity, "User ID not found", Toast.LENGTH_SHORT).show()
-                }
-                return@launch
-            }
-
-            val url = "$baseUrl/cart/$userId/clear"
-            val client = OkHttpClient()
-            val request = Request.Builder()
-                .url(url)
-                .delete() // HTTP DELETE request
-                .build()
-
-            try {
-                val response: Response = client.newCall(request).execute()
-                if (response.isSuccessful) {
-                    withContext(Dispatchers.Main) {
-                        // Clear the UI after successful deletion
-                        clearCartItems()
-                        Toast.makeText(this@CartActivity, "Cart cleared successfully", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@CartActivity, "Failed to clear cart", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Log.e("CartActivity", "Error clearing cart: ${e.message}")
-                    Toast.makeText(this@CartActivity, "Error clearing cart", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    // Method to clear cart items in the UI
-    private fun clearCartItems() {
-        cartItems.clear()
-        cartAdapter.notifyDataSetChanged()
-        updateTotalAmount()
-//        updateButton.visibility = View.GONE
-    }
-
-    private fun fetchCartDetails() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val userId = getCustomerId() // Replace with the actual cart ID
-            val url = "$baseUrl/cart/$userId"
+            val url = "$baseUrl/cart/cart/$cartId"
             val client = OkHttpClient()
             val request = Request.Builder().url(url).build()
             updateTotalAmount()
 
             try {
                 val response: Response = client.newCall(request).execute()
+                println(response)
                 if (response.isSuccessful) {
                     val responseData = response.body?.string()
                     responseData?.let {
                         val cartResponse = Gson().fromJson(it, CartResponse::class.java)
                         withContext(Dispatchers.Main) {
-                            cartId = cartResponse.id
                             // Update cartItems and notify the adapter
                             cartItems.clear()
                             cartItems.addAll(cartResponse.items)
@@ -159,19 +110,19 @@ class CartActivity : AppCompatActivity() {
                             // Update the total amount after cart details are fetched
                             updateTotalAmount()
                         }
-                        println("cart activity success")
+                        println("cart activity1 success")
                     }
                 } else {
-                    Log.e("CartActivity", "Error fetching cart details: ${response.message}")
+                    Log.e("CartActivity1", "Error fetching cart details: ${response.message}")
                 }
             } catch (e: Exception) {
-                Log.e("CartActivity", "Exception: ${e.message}")
+                Log.e("CartActivity1", "Exception: ${e.message}")
             }
         }
     }
 
 
-     fun updateTotalAmount() {
+    fun updateTotalAmount() {
         val total = calculateTotal()
         totalAmountTextView.text = String.format("Total: $%.2f", total)
     }
@@ -193,10 +144,6 @@ class CartActivity : AppCompatActivity() {
         }
     }
 
-    private fun getCustomerId(): String? {
-        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getString("customer_id", null)
-    }
 
     override fun onResume() {
         super.onResume()
