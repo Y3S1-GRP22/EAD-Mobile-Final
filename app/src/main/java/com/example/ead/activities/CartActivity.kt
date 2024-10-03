@@ -98,7 +98,7 @@ class CartActivity : AppCompatActivity() {
                 return@launch
             }
 
-            val url = "$baseUrl/cart/$userId/clear"
+            val url = "$baseUrl/cart/$cartId/clear"
             val client = OkHttpClient()
             val request = Request.Builder()
                 .url(url)

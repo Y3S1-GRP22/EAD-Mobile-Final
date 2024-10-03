@@ -37,6 +37,7 @@ class CartActivity1 : AppCompatActivity() {
     private lateinit var buttonBack: ImageButton
     private lateinit var cartItems: MutableList<CartItem>
     val baseUrl = GlobalVariable.BASE_URL
+    lateinit var cartId : String
 
 
 
@@ -46,7 +47,9 @@ class CartActivity1 : AppCompatActivity() {
         setContentView(R.layout.activity_cart1)
 
         // Initialize cartId here
-        var cartId = intent.getStringExtra("cartId")
+        cartId = intent.getStringExtra("cartId").toString()
+        var orderId = intent.getStringExtra("orderId")
+
 
         if (cartId == null) {
             Toast.makeText(this, "Cart ID is missing", Toast.LENGTH_SHORT).show()
@@ -74,10 +77,14 @@ class CartActivity1 : AppCompatActivity() {
 
         checkoutButton.setOnClickListener {
             // Pass cart ID and total amount to CheckoutActivity
+//            val totalAmount = calculateTotal()
+            val intent = Intent(this, CheckoutActivity1::class.java)
             val totalAmount = calculateTotal()
-            val intent = Intent(this, CheckoutActivity::class.java)
             intent.putExtra("total_amount", totalAmount)
+            println("tol amount in car t1 "+ totalAmount)
             intent.putExtra("cart_id", cartId) // Pass the cart ID
+            intent.putExtra("order_id", orderId) // Pass the cart ID
+
             startActivity(intent)
         }
 

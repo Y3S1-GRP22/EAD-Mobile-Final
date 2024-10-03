@@ -22,6 +22,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".activities.CheckoutActivity1"
+            android:exported="false" />
+
+        <activity
             android:name=".activities.CartActivity1"
             android:exported="false" />
         <activity

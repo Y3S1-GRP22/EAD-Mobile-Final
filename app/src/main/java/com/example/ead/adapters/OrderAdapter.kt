@@ -77,6 +77,7 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
         holder.editButton.setOnClickListener{
             val intent = Intent(context, CartActivity1::class.java)
             intent.putExtra("cartId", order.vendorId)
+            intent.putExtra("orderId", order.id)
             println(order)
             println("order.cart is"+ order.vendorId)
             context.startActivity(intent)

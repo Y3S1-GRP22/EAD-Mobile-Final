@@ -95,7 +95,7 @@ class CartAdapter(
             }
         }
 
-      
+
     }
 
     private fun updateCartItemQuantity(userId: String, itemId: String?, quantity: Int) {
@@ -194,8 +194,8 @@ class CartAdapter(
             }
         }
     }
-    
-    
+
+
 
 
 

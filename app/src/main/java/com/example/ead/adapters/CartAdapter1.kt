@@ -61,6 +61,8 @@ class CartAdapter1(
             holder.itemCountChangeTextView.text = item.quantity.toString()
 
         }
+        var cartId = activity.cartId
+        println("cart activity 1"+cartId)
 
         holder.minusButton.setOnClickListener {
             if (item.quantity > 0) {
@@ -106,7 +108,8 @@ class CartAdapter1(
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            val url = "$baseUrl/cart/$userId/items/$itemId"
+            var cartId = activity.cartId
+            val url = "$baseUrl/cart/$cartId/item/$itemId"
             val client = OkHttpClient()
             val requestBody = okhttp3.RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
@@ -153,6 +156,7 @@ class CartAdapter1(
 
     // Method to delete an item from the cart
     private fun deleteCartItem(userId: String, itemId: String?, position: Int) {
+        var cartId = activity.cartId
         if (itemId == null) {
             Toast.makeText(context, "Invalid item ID", Toast.LENGTH_SHORT).show()
             return
@@ -160,7 +164,7 @@ class CartAdapter1(
 
         // Coroutine for performing the network request on a background thread
         CoroutineScope(Dispatchers.IO).launch {
-            val url = "$baseUrl/cart/$userId/items/$itemId"
+            val url = "$baseUrl/cart/$cartId/item/$itemId"
             val client = OkHttpClient()
             val request = Request.Builder()
                 .url(url)
