@@ -1,5 +1,6 @@
 package com.example.ead.adapters
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ead.GlobalVariable
 import com.example.ead.R
@@ -49,6 +51,7 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
     }
 
     // Binding data to the ViewHolder for each item
+    @SuppressLint("ResourceAsColor")
     override fun onBindViewHolder(holder: OrderViewHolder, position: Int) {
         val order = orderList[position]
         holder.orderNumberTextView.text = "Order # : " + order.id
@@ -57,12 +60,22 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
         holder.statusTextView.text = "Status : " + order.status
 
         // Hide edit and delete buttons if the status is "Dispatched"
-        if (order.status == "Dispatched") {
+
+
+        when (order.status) {
+            "Processing" -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.g_orange_yellow))
+            "Cancelled" -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.red))
+            "Dispatched" -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.dispatched))
+            "Completed" -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.g_green))
+
+            else -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.black)) // Default
+        }
+
+
+        if (order.status == "Dispatched" || order.status == "Cancelled") {
             holder.editButton.visibility = View.GONE
             holder.deleteButton.visibility = View.GONE
-        }else if (order.status == "Cancelled") {
-            holder.editButton.visibility = View.GONE
-            holder.deleteButton.visibility = View.GONE
+
         }else {
             holder.editButton.visibility = View.VISIBLE
             holder.deleteButton.visibility = View.VISIBLE

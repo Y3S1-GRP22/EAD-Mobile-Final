@@ -38,10 +38,10 @@
     <color name="ordersOnTextColor">@color/black</color>
 
 
-        <color name="processing">#FFA500</color> <!-- Orange -->
-        <color name="completed">#008000</color> <!-- Green -->
-        <color name="cancelled">#FF0000</color> <!-- Red -->
-        <color name="dispatched">#0000FF</color> <!-- Blue -->
+        <color name="processing">#FFA500</color>
+        <color name="completed">#008000</color>
+        <color name="cancelled">#FF0000</color>
+        <color name="dispatched">#0000FF</color>
 
 
 
