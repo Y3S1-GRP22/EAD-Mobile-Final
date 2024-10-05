@@ -1,7 +1,6 @@
 package com.example.ead.adapters
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
@@ -14,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ead.GlobalVariable
 import com.example.ead.R
-import com.example.ead.activities.CartActivity
 import com.example.ead.activities.CartActivity1
 import com.example.ead.activities.OrdersActivity
 import com.example.ead.models.Order
@@ -25,10 +23,10 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
-
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 val baseUrl = GlobalVariable.BASE_URL
-
 
 class OrderAdapter(private var orderList: List<Order>, private val context: Context) :
     RecyclerView.Adapter<OrderAdapter.OrderViewHolder>() {
@@ -41,6 +39,7 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
         val statusTextView: TextView = view.findViewById(R.id.statusTextView)
         val editButton: ImageView = view.findViewById(R.id.editButtonOrder)
         val deleteButton: ImageView = view.findViewById(R.id.deleteIconOrder)
+        val orderDateTextView: TextView = view.findViewById(R.id.orderDateTextView)
     }
 
     // Inflating the layout for each item in the RecyclerView
@@ -59,54 +58,78 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
         holder.totalAmountTextView.text = "Total Amount : $" + order.totalPrice.toString()
         holder.statusTextView.text = "Status : " + order.status
 
-        // Hide edit and delete buttons if the status is "Dispatched"
+        // Parse and format order date
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val parsedDate = ZonedDateTime.parse(order.orderDate).format(dateFormatter)
+        holder.orderDateTextView.text = "Order Date : $parsedDate"
 
-
+        // Set status text color based on the status
         when (order.status) {
-            "Processing" -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.g_orange_yellow))
-            "Cancelled" -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.red))
-            "Dispatched" -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.dispatched))
-            "Completed" -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.g_green))
+            "Processing" -> holder.statusTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.g_orange_yellow
+                )
+            )
 
-            else -> holder.statusTextView.setTextColor(ContextCompat.getColor(context, R.color.black)) // Default
+            "Cancelled" -> holder.statusTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.red
+                )
+            )
+
+            "Dispatched" -> holder.statusTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.dispatched
+                )
+            )
+
+            "Completed" -> holder.statusTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.g_green
+                )
+            )
+
+            else -> holder.statusTextView.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.black
+                )
+            ) // Default
         }
 
-
+        // Hide edit and delete buttons if the status is "Dispatched" or "Cancelled"
         if (order.status == "Dispatched" || order.status == "Cancelled") {
             holder.editButton.visibility = View.GONE
             holder.deleteButton.visibility = View.GONE
-
-        }else {
+        } else {
             holder.editButton.visibility = View.VISIBLE
             holder.deleteButton.visibility = View.VISIBLE
         }
 
+        // Handle delete button click
         holder.deleteButton.setOnClickListener {
             order.id?.let { orderId ->
-                updateOrderStatus(orderId)  // Pass the position of the clicked item
+                updateOrderStatus(orderId)
             }
         }
 
-        holder.editButton.setOnClickListener{
+        // Handle edit button click
+        holder.editButton.setOnClickListener {
             val intent = Intent(context, CartActivity1::class.java)
             intent.putExtra("cartId", order.vendorId)
             intent.putExtra("orderId", order.id)
-            println(order)
-            println("order.cart is"+ order.vendorId)
             context.startActivity(intent)
         }
-
-
     }
-
-
 
     // Return the total number of items
     override fun getItemCount(): Int {
         return orderList.size
     }
-
- 
 
     private fun updateOrderStatus(orderId: String) {
         // Coroutine for performing the network request on a background thread
@@ -122,11 +145,11 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
 
             if (response.isSuccessful) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Order cancelled successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Order cancelled successfully", Toast.LENGTH_SHORT)
+                        .show()
                     updateOrderList(orderList)
                     val refresh = Intent(context, OrdersActivity::class.java)
                     context.startActivity(refresh) // Pass the context explicitly
-
                 }
             } else {
                 withContext(Dispatchers.Main) {
@@ -140,9 +163,4 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
         orderList = newOrderList
         notifyDataSetChanged()
     }
-
-
 }
-
-
-

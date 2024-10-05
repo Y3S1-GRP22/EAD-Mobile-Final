@@ -49,11 +49,8 @@ class CartAdapter1(
         holder.itemCountChangeTextView.text = item.quantity.toString()
 
         // Load image using Picasso
-        Picasso.get()
-            .load(item.imagePath)
-            .placeholder(R.drawable.logo_dark)
-            .error(R.drawable.logo_dark)
-            .into(holder.itemImageView)
+        Picasso.get().load(item.imagePath).placeholder(R.drawable.logo_dark)
+            .error(R.drawable.logo_dark).into(holder.itemImageView)
 
         // Set click listeners for the + and - buttons
         holder.plusButton.setOnClickListener {
@@ -62,7 +59,7 @@ class CartAdapter1(
 
         }
         var cartId = activity.cartId
-        println("cart activity 1"+cartId)
+        println("cart activity 1" + cartId)
 
         holder.minusButton.setOnClickListener {
             if (item.quantity > 0) {
@@ -115,10 +112,7 @@ class CartAdapter1(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
                 quantity.toString() // Sending quantity as plain text in the request body
             )
-            val request = Request.Builder()
-                .url(url)
-                .put(requestBody)
-                .build()
+            val request = Request.Builder().url(url).put(requestBody).build()
 
             try {
                 val response = client.newCall(request).execute()
@@ -132,11 +126,17 @@ class CartAdapter1(
 
                         }
                         activity.updateTotalAmount()
-                        Toast.makeText(context, "Item quantity updated successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context, "Item quantity updated successfully", Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Failed to update item: ${response.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Failed to update item: ${response.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
@@ -147,7 +147,6 @@ class CartAdapter1(
             }
         }
     }
-
 
 
     override fun getItemCount(): Int {
@@ -166,9 +165,7 @@ class CartAdapter1(
         CoroutineScope(Dispatchers.IO).launch {
             val url = "$baseUrl/cart/$cartId/item/$itemId"
             val client = OkHttpClient()
-            val request = Request.Builder()
-                .url(url)
-                .delete() // HTTP DELETE request
+            val request = Request.Builder().url(url).delete() // HTTP DELETE request
                 .build()
 
             try {
@@ -184,11 +181,16 @@ class CartAdapter1(
                         activity.updateTotalAmount()
 
 
-                        Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Failed to delete item: ${response.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Failed to delete item: ${response.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
@@ -199,9 +201,6 @@ class CartAdapter1(
             }
         }
     }
-
-
-
 
 
     class CartViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

@@ -4,10 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
@@ -51,7 +55,7 @@ class ProductDetailActivity : AppCompatActivity() {
 
     val baseUrl = GlobalVariable.BASE_URL
 
-
+    private lateinit var buttonUser: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +70,6 @@ class ProductDetailActivity : AppCompatActivity() {
 
         ratingBarInput = findViewById(R.id.ratingBarInput)
         commentInput = findViewById(R.id.commentEditTextInput)
-
 
 
         val customerId = getCustomerId()
@@ -86,7 +89,6 @@ class ProductDetailActivity : AppCompatActivity() {
         }
 
 
-
         // Handle Cart click to load Cart
         buttonCart.setOnClickListener {
             val intent = Intent(this, CartActivity::class.java)
@@ -99,33 +101,39 @@ class ProductDetailActivity : AppCompatActivity() {
         buttonAddToCart.setOnClickListener {
             val userId = getCustomerId()
             if (userId == null) {
-                Toast.makeText(this@ProductDetailActivity, "Please login to add to cart", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@ProductDetailActivity,
+                    "Please login to add to cart",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
             // Get product details from the intent or UI elements
             val productId = intent.getStringExtra("productId")
             val productName = intent.getStringExtra("productName")
-            val quantity = quantityTextView.text.toString().toInt()  // Assuming quantityTextView displays the integer value
+            val quantity = quantityTextView.text.toString()
+                .toInt()  // Assuming quantityTextView displays the integer value
             val price = intent.getDoubleExtra("productPrice", 0.0)
             if (price == 0.0) {
                 Toast.makeText(this, "Invalid price", Toast.LENGTH_SHORT).show()
             }
-            val imagePath = intent.getStringExtra("productImageUrl")  // Assuming productImageUrl is a String value
+            val imagePath =
+                intent.getStringExtra("productImageUrl")  // Assuming productImageUrl is a String value
             var id = null
 
             // Create CartItem object
-            val cartItem = CartItem(id,productId, productName, quantity, price, imagePath)
+            val cartItem = CartItem(id, productId, productName, quantity, price, imagePath)
 
             // Call Retrofit to add item to cart
             addToCart(userId, cartItem)
         }
 
+        buttonUser = findViewById(R.id.buttonUser)
 
-
-
-
-
+        buttonUser.setOnClickListener {
+            showUserOptions(buttonUser)
+        }
 
         val rating = ratingBarInput.rating
         Log.d("rating bar input", rating.toString())
@@ -187,17 +195,20 @@ class ProductDetailActivity : AppCompatActivity() {
             val comment = commentInput.text.toString()
 
             if (userId == null || productId == null || comment.isEmpty()) {
-                Toast.makeText(this@ProductDetailActivity, "Please fill in all fields.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@ProductDetailActivity,
+                    "Please fill in all fields.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@setOnClickListener
             }
 
             // Create the comment object
-            val commentData = Comment("",userId, productId, vendorId, rating.toInt(), comment)
+            val commentData = Comment("", userId, productId, vendorId, rating.toInt(), comment)
 
             // Send the comment data to the server
             submitComment(commentData)
         }
-
 
 
         // Set up SwipeRefreshLayout
@@ -229,12 +240,55 @@ class ProductDetailActivity : AppCompatActivity() {
         }
     }
 
+    private fun showUserOptions(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        val inflater: MenuInflater = popupMenu.menuInflater
+        inflater.inflate(R.menu.menu_user_options, popupMenu.menu)
+
+        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_home -> {
+                    // Navigate to HomeFragment
+                    val intent = Intent(this, Main::class.java)
+                    startActivity(intent)
+                    true
+                }
+
+                R.id.menu_logout -> {
+                    // Clear shared preferences and logout
+                    logoutUser()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
+    }
+
+
+    // Method to clear shared preferences and log out
+    private fun logoutUser() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()  // Clears all the saved data
+        editor.apply()  // Apply changes
+
+        // Start the LoginRegisterActivity
+        val intent = Intent(this, LoginRegisterActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
     private fun submitComment(comment: Comment) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 // Convert comment data to JSON
                 val jsonComment = Gson().toJson(comment)
-                val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonComment)
+                val requestBody = RequestBody.create(
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
+                    jsonComment
+                )
 
                 // Create the POST request
                 val request = Request.Builder()
@@ -249,19 +303,32 @@ class ProductDetailActivity : AppCompatActivity() {
                 // Check if the response is successful
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        Toast.makeText(this@ProductDetailActivity, "Review added successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@ProductDetailActivity,
+                            "Review added successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         val responseData = response.body?.string()
-                        val intent = Intent(this@ProductDetailActivity, CommentsActivity::class.java)
+                        val intent =
+                            Intent(this@ProductDetailActivity, CommentsActivity::class.java)
                         startActivity(intent)
                         Log.d("ProductDetailActivity", "Response: $responseData")
                     } else {
-                        Toast.makeText(this@ProductDetailActivity, "Failed to add review", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@ProductDetailActivity,
+                            "Failed to add review",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         Log.d("ProductDetailActivity", "Error: ${response.code}")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ProductDetailActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ProductDetailActivity,
+                        "Error: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     Log.e("ProductDetailActivity", "Error: ${e.message}", e)
                 }
             }
@@ -276,36 +343,50 @@ class ProductDetailActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         navigateToCartActivity()
-                        Toast.makeText(this@ProductDetailActivity, "Item added to cart successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@ProductDetailActivity,
+                            "Item added to cart successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         println("item cart success")
-                         // Navigate here after successful addition
+                        // Navigate here after successful addition
                     } else {
-                        Toast.makeText(this@ProductDetailActivity, "Failed to add item to cart", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@ProductDetailActivity,
+                            "Failed to add item to cart",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         println("item cart fail")
 
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ProductDetailActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ProductDetailActivity,
+                        "Error: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
 
     private fun navigateToCartActivity() {
-        val intent = Intent(this, CartActivity::class.java) // Replace CartActivity::class.java with the actual class name if different
+        val intent = Intent(
+            this,
+            CartActivity::class.java
+        ) // Replace CartActivity::class.java with the actual class name if different
         startActivity(intent)
     }
-
-
 
 
     private suspend fun addItemToCart(userId: String, cartItem: CartItem): okhttp3.Response {
         val client = OkHttpClient()
 
         val jsonCartItem = Gson().toJson(cartItem)
-        val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonCartItem)
+        val requestBody =
+            RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonCartItem)
 
         val request = Request.Builder()
 
@@ -373,14 +454,6 @@ class ProductDetailActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         return sharedPreferences.getString("customer_id", null) // Returns null if not found
     }
-
-
-
-
-
-
-
-
 
 
 }

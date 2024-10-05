@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ead.R
@@ -27,7 +28,7 @@ class CommentAdapter(
         holder.itemNameTextView.text = comment.productName ?: "Unknown Product"
         holder.itemVendorTextView.text = comment.vendorId
         holder.itemCommentTextView.text = comment.comments
-        holder.itemRatingTextView.text = "Rating: ${comment.rating}"
+        holder.itemRatingBar.rating = comment.rating.toFloat() // Set the rating value in the RatingBar
 
 
         Picasso.get()
@@ -43,11 +44,13 @@ class CommentAdapter(
     }
 
     // ViewHolder class to hold references to each view in the layout
+    // ViewHolder class to hold references to each view in the layout
     class CommentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val itemImageView: ImageView = itemView.findViewById(R.id.itemImageView)
         val itemNameTextView: TextView = itemView.findViewById(R.id.itemNameTextView)
         val itemVendorTextView: TextView = itemView.findViewById(R.id.itemVendorTextView)
         val itemCommentTextView: TextView = itemView.findViewById(R.id.itemCommentTextView)
-        val itemRatingTextView: TextView = itemView.findViewById(R.id.itemRatingTextView)
+        val itemRatingBar: RatingBar = itemView.findViewById(R.id.ratingBar) // Add this line
     }
+
 }

@@ -16,6 +16,5 @@ interface CartApi {
     fun getCartDetails(@Path("userId") userId: String): Call<List<CartItem>>
 
 
-
 }
 

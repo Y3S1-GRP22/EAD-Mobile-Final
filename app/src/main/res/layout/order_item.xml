@@ -47,11 +47,20 @@
                 android:textSize="14sp" />
 
             <TextView
+                android:id="@+id/orderDateTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Order Date"
+                style="@style/h3"
+                android:textSize="14sp" />
+
+            <TextView
                 android:id="@+id/statusTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Status: Completed"
                 android:fontFamily="@font/poppins_light"
+                android:textStyle="bold"
                 android:textSize="14sp" />
             <LinearLayout
                 android:layout_width="wrap_content"

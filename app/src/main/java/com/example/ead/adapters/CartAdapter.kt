@@ -128,11 +128,19 @@ class CartAdapter(
 
                         }
                         activity.updateTotalAmount()
-                        Toast.makeText(context, "Item quantity updated successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Item quantity updated successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Failed to update item: ${response.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Failed to update item: ${response.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
@@ -143,7 +151,6 @@ class CartAdapter(
             }
         }
     }
-
 
 
     override fun getItemCount(): Int {
@@ -179,11 +186,16 @@ class CartAdapter(
                         activity.updateTotalAmount()
 
 
-                        Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Failed to delete item: ${response.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Failed to delete item: ${response.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
@@ -194,9 +206,6 @@ class CartAdapter(
             }
         }
     }
-
-
-
 
 
     class CartViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

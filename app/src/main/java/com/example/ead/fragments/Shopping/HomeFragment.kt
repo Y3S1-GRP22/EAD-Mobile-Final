@@ -78,7 +78,12 @@ class HomeFragment : Fragment() {
         categorySpinner.adapter = adapter
 
         categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
                 val selectedCategory = parent.getItemAtPosition(position).toString()
                 Log.d("HomeFragment", "Selected Category: $selectedCategory")
                 filterProductsByCategory(selectedCategory)
@@ -100,7 +105,12 @@ class HomeFragment : Fragment() {
         sortingSpinner.adapter = adapter
 
         sortingSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
                 val selectedSortOption = parent.getItemAtPosition(position).toString()
                 Log.d("HomeFragment", "Selected Sort Option: $selectedSortOption")
                 sortProducts(selectedSortOption)
@@ -133,19 +143,26 @@ class HomeFragment : Fragment() {
             filteredProductList.addAll(productList)
         } else {
             for (product in productList) {
-                if (product.name.contains(query, ignoreCase = true)) {
+                val productRating = getProductRatingText(product)
+
+                // Check if the query matches product name, vendor, or rating
+                if (product.name.contains(query, ignoreCase = true) ||
+                    product.vendorId.contains(query, ignoreCase = true) ||
+                    productRating.contains(query, ignoreCase = true)
+                ) {
                     filteredProductList.add(product)
                 }
-
-                if (product.vendorId.contains(query, ignoreCase = true)) {
-                    filteredProductList.add(product)
-                }
-
-
             }
         }
         productAdapter.notifyDataSetChanged()
         Log.d("HomeFragment", "Filtered product count: ${filteredProductList.size}")
+    }
+
+    private fun getProductRatingText(product: Product): String {
+
+        val productView =
+            recyclerViewProducts.findViewHolderForAdapterPosition(productList.indexOf(product)) as? ProductAdapter.ProductViewHolder
+        return productView?.textViewRating?.text?.toString()?.replace("Rating: ", "") ?: ""
     }
 
     private fun filterProductsByCategory(category: String) {
@@ -171,15 +188,19 @@ class HomeFragment : Fragment() {
             "A-Z" -> {
                 filteredProductList.sortBy { it.name }
             }
+
             "Z-A" -> {
                 filteredProductList.sortByDescending { it.name }
             }
+
             "Price: Low to High" -> {
                 filteredProductList.sortBy { it.price }
             }
+
             "Price: High to Low" -> {
                 filteredProductList.sortByDescending { it.price }
             }
+
             "Default" -> {
                 // If you want to reset to the original order, you'll need to maintain the original list
                 filteredProductList.clear()
@@ -194,7 +215,7 @@ class HomeFragment : Fragment() {
         Log.d("API_CALL", "Starting API call to load products")
 
         val response = RetrofitInstance.Productapi.getProducts()
-        Log.d("prod response",response.toString())
+        Log.d("prod response", response.toString())
 
         // Make API request
         response.enqueue(object : Callback<List<Product>> {

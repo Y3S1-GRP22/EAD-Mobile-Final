@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 import android.util.Log
+import com.example.ead.util.EmailService
 
 class RegisterViewModel : ViewModel() {
 
@@ -86,8 +87,22 @@ class RegisterViewModel : ViewModel() {
 
                 if (response.isSuccessful) {
                     _register.value = Resource.Success(response.body()!!)
-                    Toast.makeText(context, "Registration successful! Admin will activate your account shortly", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Registration successful! Admin will activate your account shortly",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    var subject = "Account Activation Pending"
+                    var message = "Dear ${customer.fullName},\n\n" +
+                            "Thank you for registering. Your account is pending activation. " +
+                            "You will receive a confirmation email once your account has been activated.\n\n" +
+                            "Best regards,\niCorner"
+                    customer.email?.let {
+                        EmailService(context, it, subject, message).execute()
+                    }
+
                     onSuccess()
+
                 } else {
                     val errorMessage = response.errorBody()?.string() ?: "Unknown error occurred"
                     Log.e("RegisterViewModel", "Error: $errorMessage")

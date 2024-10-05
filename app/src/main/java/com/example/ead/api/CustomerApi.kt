@@ -17,7 +17,7 @@ interface CustomerApi {
 
     @POST("customer/login")
 
-        suspend fun loginCustomer(@Body loginRequest: LoginRequest): Response<LoginResponse>
+    suspend fun loginCustomer(@Body loginRequest: LoginRequest): Response<LoginResponse>
 
     @PUT("customer/update/{id}")
     fun updateCustomer(
@@ -38,6 +38,7 @@ data class CustomerUpdateResponse(
     val address: String,
     val isActive: Boolean
 )
+
 data class CustomerDeleteResponse(
     val email: String,
     val status: String

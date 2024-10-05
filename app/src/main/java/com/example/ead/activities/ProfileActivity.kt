@@ -9,11 +9,14 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -42,34 +45,21 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var loadingProgressBar: ProgressBar
     private lateinit var toolbarLayout: RelativeLayout
     private lateinit var constraintLayout: ConstraintLayout
-
     private lateinit var profileEditImage: ImageView
     private lateinit var cusAccountProfileImage: ImageView
     private lateinit var editTextFullName: EditText
     private lateinit var editTextEmail: EditText
     private lateinit var editTextPhoneNo: EditText
-
     private lateinit var cusAccountAddress1: EditText
     private lateinit var btnCusDelete: Button
-
-
     private lateinit var cusAccountProfileImageEditFrame: View
     private lateinit var cusAccountButtons: View
-
-    private lateinit var originalDrawable: Drawable
-
-
     private var selectedImageUri: Uri? = null
-    private var imageData: String? = null
-
     private lateinit var buttonBack: ImageButton
     private lateinit var buttonCart: ImageButton
     private lateinit var clickcartHome: ImageView
-
     private lateinit var btnCusUpdate: Button
-
-
-
+    private lateinit var buttonUser: ImageButton
 
     @SuppressLint("WrongViewCast")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,6 +79,12 @@ class ProfileActivity : AppCompatActivity() {
         // Handle delete button click
         btnCusDelete.setOnClickListener {
             deleteUserAccount()
+        }
+
+        buttonUser = findViewById(R.id.buttonUser)
+
+        buttonUser.setOnClickListener {
+            showUserOptions(buttonUser)
         }
 
         buttonBack.setOnClickListener { onBackPressed() }
@@ -134,9 +130,6 @@ class ProfileActivity : AppCompatActivity() {
         }
 
 
-
-
-
         // Retrieve user details from SharedPreferences
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val customerName = sharedPreferences.getString("customer_name", "")
@@ -149,6 +142,46 @@ class ProfileActivity : AppCompatActivity() {
         editTextEmail.setText(customerEmail)
         editTextPhoneNo.setText(customerMobileNumber)
         cusAccountAddress1.setText(customerAddress)
+    }
+
+    private fun showUserOptions(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        val inflater: MenuInflater = popupMenu.menuInflater
+        inflater.inflate(R.menu.menu_user_options, popupMenu.menu)
+
+        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_home -> {
+                    // Navigate to HomeFragment
+                    val intent = Intent(this, Main::class.java)
+                    startActivity(intent)
+                    true
+                }
+
+                R.id.menu_logout -> {
+                    // Clear shared preferences and logout
+                    logoutUser()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
+    }
+
+
+    // Method to clear shared preferences and log out
+    private fun logoutUser() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()  // Clears all the saved data
+        editor.apply()  // Apply changes
+
+        // Start the LoginRegisterActivity
+        val intent = Intent(this, LoginRegisterActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
     }
 
     private fun deleteUserAccount() {
@@ -166,30 +199,45 @@ class ProfileActivity : AppCompatActivity() {
         val call = RetrofitInstance.Customerapi.deactivateCustomer(customerEmail)
 
         call.enqueue(object : Callback<CustomerDeleteResponse> {
-            override fun onResponse(call: Call<CustomerDeleteResponse>, response: Response<CustomerDeleteResponse>) {
+            override fun onResponse(
+                call: Call<CustomerDeleteResponse>,
+                response: Response<CustomerDeleteResponse>
+            ) {
                 if (response.isSuccessful) {
                     val responseBody = response.body()
 
                     if (responseBody != null && responseBody.status == "Success") {
                         // Show success message and redirect or update UI
-                        Toast.makeText(this@ProfileActivity, "Account deleted successfully.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@ProfileActivity,
+                            "Account deleted successfully.",
+                            Toast.LENGTH_SHORT
+                        ).show()
 
                         // Optionally, you can log the user out or navigate them to the login screen
                         val intent = Intent(this@ProfileActivity, LoginRegisterActivity::class.java)
                         startActivity(intent)
                         finish() // Close the ProfileActivity
                     } else {
-                        Toast.makeText(this@ProfileActivity, "Failed to delete account.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@ProfileActivity,
+                            "Failed to delete account.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
-                    Toast.makeText(this@ProfileActivity, "Error: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ProfileActivity,
+                        "Error: ${response.code()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
 
 
-
             override fun onFailure(call: Call<CustomerDeleteResponse>, t: Throwable) {
-                Toast.makeText(this@ProfileActivity, "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProfileActivity, "Error: ${t.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
         })
     }
@@ -204,14 +252,14 @@ class ProfileActivity : AppCompatActivity() {
         val address = cusAccountAddress1.text.toString()
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val password = sharedPreferences.getString("customer_password", "")
-        val userId = sharedPreferences.getString("customer_id","")
+        val userId = sharedPreferences.getString("customer_id", "")
 
         // Check for validation if required (e.g. non-empty fields)
-        val updateRequest = Customer(fullName,email, password, phoneNo,address)
-        Log.d("update request",updateRequest.toString())
+        val updateRequest = Customer(fullName, email, password, phoneNo, address)
+        Log.d("update request", updateRequest.toString())
 
-        val call = RetrofitInstance.Customerapi.updateCustomer(userId,updateRequest)
-        Log.d("updated call",call.toString())
+        val call = RetrofitInstance.Customerapi.updateCustomer(userId, updateRequest)
+        Log.d("updated call", call.toString())
 
 
 

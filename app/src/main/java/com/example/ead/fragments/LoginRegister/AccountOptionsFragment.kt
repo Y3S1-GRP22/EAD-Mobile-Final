@@ -9,7 +9,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.ead.R
 import com.example.ead.databinding.FragmentAccountOptionsBinding
 
-class AccountOptionsFragment: Fragment(R.layout.fragment_account_options) {
+class AccountOptionsFragment : Fragment(R.layout.fragment_account_options) {
     private lateinit var binding: FragmentAccountOptionsBinding
 
     override fun onCreateView(

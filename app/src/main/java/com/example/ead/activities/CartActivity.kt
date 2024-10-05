@@ -5,9 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -37,6 +40,7 @@ class CartActivity : AppCompatActivity() {
     private lateinit var cartItems: MutableList<CartItem>
     val baseUrl = GlobalVariable.BASE_URL
     private var cartId: String? = null
+    private lateinit var buttonUser: ImageButton
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +56,7 @@ class CartActivity : AppCompatActivity() {
 
         // Set up RecyclerView
         cartItems = mutableListOf()
-        cartAdapter = CartAdapter(cartItems,this,this)
+        cartAdapter = CartAdapter(cartItems, this, this)
         cartRecyclerView.layoutManager = LinearLayoutManager(this)
         cartRecyclerView.adapter = cartAdapter
 
@@ -65,6 +69,14 @@ class CartActivity : AppCompatActivity() {
             // Call the method to clear the cart
             clearCartItemsFromServer()
         }
+
+        buttonUser = findViewById(R.id.buttonUser)
+
+        buttonUser.setOnClickListener {
+            Log.d("CheckoutActivity1", "User icon clicked")
+            showUserOptions(buttonUser)
+        }
+
 
         checkoutButton.setOnClickListener {
             // Pass cart ID and total amount to CheckoutActivity
@@ -84,7 +96,45 @@ class CartActivity : AppCompatActivity() {
         fetchCartDetails()
     }
 
+    private fun showUserOptions(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        val inflater: MenuInflater = popupMenu.menuInflater
+        inflater.inflate(R.menu.menu_user_options, popupMenu.menu)
 
+        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_home -> {
+                    // Navigate to HomeFragment
+                    val intent = Intent(this, Main::class.java)
+                    startActivity(intent)
+                    true
+                }
+
+                R.id.menu_logout -> {
+                    // Clear shared preferences and logout
+                    logoutUser()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
+    }
+
+
+    // Method to clear shared preferences and log out
+    private fun logoutUser() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()  // Clears all the saved data
+        editor.apply()  // Apply changes
+
+        // Start the LoginRegisterActivity
+        val intent = Intent(this, LoginRegisterActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
 
 
     // Method to clear cart from server
@@ -93,7 +143,8 @@ class CartActivity : AppCompatActivity() {
             val userId = getCustomerId() // Get the userId from SharedPreferences
             if (userId == null) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CartActivity, "User ID not found", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@CartActivity, "User ID not found", Toast.LENGTH_SHORT)
+                        .show()
                 }
                 return@launch
             }
@@ -111,17 +162,26 @@ class CartActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         // Clear the UI after successful deletion
                         clearCartItems()
-                        Toast.makeText(this@CartActivity, "Cart cleared successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@CartActivity,
+                            "Cart cleared successfully",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@CartActivity, "Failed to clear cart", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@CartActivity,
+                            "Failed to clear cart",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("CartActivity", "Error clearing cart: ${e.message}")
-                    Toast.makeText(this@CartActivity, "Error clearing cart", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@CartActivity, "Error clearing cart", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         }
@@ -171,7 +231,7 @@ class CartActivity : AppCompatActivity() {
     }
 
 
-     fun updateTotalAmount() {
+    fun updateTotalAmount() {
         val total = calculateTotal()
         totalAmountTextView.text = String.format("Total: $%.2f", total)
     }
@@ -203,7 +263,6 @@ class CartActivity : AppCompatActivity() {
         // Recalculate total when the activity is resumed (e.g., after a refresh)
         updateTotalAmount()
     }
-
 
 
 }

@@ -1,7 +1,6 @@
 package com.example.ead.fragments.LoginRegister
 
 
-
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -48,15 +47,15 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 viewModel.loginWithEmailAndPassword(requireContext(), email, password) {
                     // Navigate to the main screen or dashboard on success
                     val intent = Intent(context, Main::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear previous activities
+                    intent.flags =
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK // Clear previous activities
                     context?.startActivity(intent)
                 }
             } else {
-                Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
-
-
 
 
     }

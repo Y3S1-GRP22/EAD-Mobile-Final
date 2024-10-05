@@ -1,11 +1,17 @@
 package com.example.ead.activities
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,7 +36,9 @@ class CommentsActivity : AppCompatActivity() {
     private lateinit var commentAdapter: CommentAdapter
     private lateinit var commentsList: MutableList<Comment>
     val baseUrl = GlobalVariable.BASE_URL
-    private lateinit var buttonBack : ImageView
+    private lateinit var buttonBack: ImageView
+    private lateinit var buttonUser: ImageButton
+
 
     private val client = OkHttpClient() // OkHttp client instance
 
@@ -45,9 +53,55 @@ class CommentsActivity : AppCompatActivity() {
         buttonBack = findViewById(R.id.buttonBack)
         buttonBack.setOnClickListener { onBackPressed() }
 
+        buttonUser = findViewById(R.id.buttonUser)
+
+        buttonUser.setOnClickListener {
+            showUserOptions(buttonUser)
+        }
+
 
         // Fetch comments from API
         getCustomerId()?.let { fetchCommentsFromApi(it) }
+    }
+
+    private fun showUserOptions(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        val inflater: MenuInflater = popupMenu.menuInflater
+        inflater.inflate(R.menu.menu_user_options, popupMenu.menu)
+
+        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_home -> {
+                    // Navigate to HomeFragment
+                    val intent = Intent(this, Main::class.java)
+                    startActivity(intent)
+                    true
+                }
+
+                R.id.menu_logout -> {
+                    // Clear shared preferences and logout
+                    logoutUser()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
+    }
+
+
+    // Method to clear shared preferences and log out
+    private fun logoutUser() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()  // Clears all the saved data
+        editor.apply()  // Apply changes
+
+        // Start the LoginRegisterActivity
+        val intent = Intent(this, LoginRegisterActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
     }
 
     private fun fetchCommentsFromApi(userId: String) {
@@ -61,7 +115,11 @@ class CommentsActivity : AppCompatActivity() {
             override fun onFailure(call: Call, e: IOException) {
                 Log.e("CommentsActivity", "Error fetching comments: ${e.message}")
                 runOnUiThread {
-                    Toast.makeText(this@CommentsActivity, "Failed to load comments", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@CommentsActivity,
+                        "Failed to load comments",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
 
@@ -84,7 +142,11 @@ class CommentsActivity : AppCompatActivity() {
                     }
                 } else {
                     runOnUiThread {
-                        Toast.makeText(this@CommentsActivity, "Failed to load comments", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@CommentsActivity,
+                            "Failed to load comments",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -123,7 +185,10 @@ class CommentsActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    Log.e("CommentsActivity", "Failed to load product details for productId: ${comment.productId}")
+                    Log.e(
+                        "CommentsActivity",
+                        "Failed to load product details for productId: ${comment.productId}"
+                    )
                 }
             }
         })

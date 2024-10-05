@@ -47,6 +47,15 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.7" // Updated Compose compiler version
     }
+
+    packagingOptions {
+        exclude("META-INF/DEPENDENCIES")
+        exclude("META-INF/NOTICE")
+        exclude("META-INF/LICENSE")
+        exclude("META-INF/LICENSE.md") // Exclude LICENSE.md if needed
+        exclude("META-INF/NOTICE.md") // Add this line to exclude NOTICE.md
+    }
+
 }
 
 dependencies {
@@ -80,6 +89,10 @@ dependencies {
     implementation ("com.squareup.okhttp3:okhttp:4.9.3")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation ("com.sun.mail:android-mail:1.6.7")
+    implementation ("com.sun.mail:android-activation:1.6.7")
+
+
 
 
     // Navigation component

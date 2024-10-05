@@ -4,10 +4,13 @@ package com.example.ead.activities
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.NonNull
@@ -25,6 +28,8 @@ class Main : AppCompatActivity() {
     private lateinit var buttonDrawerMenuRight: ImageButton
     private lateinit var navigationView: NavigationView
     private lateinit var clickcartLogo: ImageView
+    private lateinit var buttonUser: ImageButton
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +57,13 @@ class Main : AppCompatActivity() {
             drawerLayout.open()
         }
 
+        buttonUser = findViewById(R.id.buttonUser)
+
+        buttonUser.setOnClickListener {
+            Log.d("CheckoutActivity1", "User icon clicked")
+            showUserOptions(buttonUser)
+        }
+
         // Handle clickcart_logo click to load HomeFragment
         clickcartLogo.setOnClickListener {
             val transaction: FragmentTransaction = supportFragmentManager.beginTransaction()
@@ -62,7 +74,8 @@ class Main : AppCompatActivity() {
         val headerView = navigationView.getHeaderView(0)
         val useImage: ImageView = headerView.findViewById(R.id.userImage)
         val textUsername: TextView = headerView.findViewById(R.id.textUserName)
-        val textUserEmail: TextView = headerView.findViewById(R.id.textUserEmail) // Ensure this ID matches
+        val textUserEmail: TextView =
+            headerView.findViewById(R.id.textUserEmail) // Ensure this ID matches
 
 
         textUsername.text = username
@@ -89,21 +102,25 @@ class Main : AppCompatActivity() {
                     transaction.replace(R.id.mainContent, HomeFragment())
                     transaction.commit()
                 }
+
                 R.id.navProfile -> {
                     // Launch ProfileActivity
                     val intent = Intent(this, ProfileActivity::class.java)
                     startActivity(intent)
                 }
+
                 R.id.navCart -> {
                     // Launch CartActivity
                     val intent = Intent(this, CartActivity::class.java)
                     startActivity(intent)
                 }
+
                 R.id.navMyOrders -> {
                     // Launch OrdersActivity
                     val intent = Intent(this, OrdersActivity::class.java)
                     startActivity(intent)
                 }
+
                 R.id.navMyComments -> {
                     // Launch CommentsActivity
                     val intent = Intent(this, CommentsActivity::class.java)
@@ -132,4 +149,46 @@ class Main : AppCompatActivity() {
             true
         }
     }
+
+    private fun showUserOptions(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        val inflater: MenuInflater = popupMenu.menuInflater
+        inflater.inflate(R.menu.menu_user_options, popupMenu.menu)
+
+        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_home -> {
+                    // Navigate to HomeFragment
+                    val intent = Intent(this, Main::class.java)
+                    startActivity(intent)
+                    true
+                }
+
+                R.id.menu_logout -> {
+                    println("Going to logout")
+
+                    logoutUser()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
+    }
+
+
+    // Method to clear shared preferences and log out
+    private fun logoutUser() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()  // Clears all the saved data
+        editor.apply()  // Apply changes
+
+        // Start the LoginRegisterActivity
+        val intent = Intent(this, LoginRegisterActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
 }

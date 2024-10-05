@@ -1,11 +1,15 @@
 package com.example.ead.activities
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ImageButton
+import android.widget.PopupMenu
 import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.ead.GlobalVariable
 import com.example.ead.R
 import com.example.ead.adapters.OrderAdapter
+import com.example.ead.fragments.HomeFragment
 import com.example.ead.models.Order
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +40,9 @@ class OrdersActivity : AppCompatActivity() {
     private lateinit var filteredOrderList: MutableList<Order> // To store filtered orders
     private lateinit var spinnerOrderStatus: Spinner
     private lateinit var client: OkHttpClient
+    private lateinit var buttonCart: ImageButton
+    private lateinit var buttonUser: ImageButton
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,9 +52,24 @@ class OrdersActivity : AppCompatActivity() {
         buttonBack = findViewById(R.id.buttonBack)
         orderRecyclerView = findViewById(R.id.orderRecyclerView)
         spinnerOrderStatus = findViewById(R.id.spinnerOrderStatus)
+        buttonCart = findViewById(R.id.buttonCart)
+
+        buttonCart.setOnClickListener {
+            startActivity(Intent(this, CartActivity::class.java))
+        }
+
 
         // Set click listener for the back button
-        buttonBack.setOnClickListener { onBackPressed() }
+        buttonBack.setOnClickListener {
+            startActivity(Intent(this, HomeFragment::class.java))
+
+        }
+
+        buttonUser = findViewById(R.id.buttonUser)
+
+        buttonUser.setOnClickListener {
+            showUserOptions(buttonUser)
+        }
 
         // Set up RecyclerView
         orderRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -60,7 +83,12 @@ class OrdersActivity : AppCompatActivity() {
 
         // Set up Spinner listener
         spinnerOrderStatus.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
                 if (::orderList.isInitialized) { // Check if orderList is initialized
                     val selectedStatus = parent?.getItemAtPosition(position).toString()
                     filterOrders(selectedStatus) // Call filterOrders when initialized
@@ -73,6 +101,46 @@ class OrdersActivity : AppCompatActivity() {
                 // Do nothing
             }
         }
+    }
+
+    private fun showUserOptions(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        val inflater: MenuInflater = popupMenu.menuInflater
+        inflater.inflate(R.menu.menu_user_options, popupMenu.menu)
+
+        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_home -> {
+                    // Navigate to HomeFragment
+                    val intent = Intent(this, Main::class.java)
+                    startActivity(intent)
+                    true
+                }
+
+                R.id.menu_logout -> {
+                    // Clear shared preferences and logout
+                    logoutUser()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
+    }
+
+
+    // Method to clear shared preferences and log out
+    private fun logoutUser() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()  // Clears all the saved data
+        editor.apply()  // Apply changes
+
+        // Start the LoginRegisterActivity
+        val intent = Intent(this, LoginRegisterActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
     }
 
     private fun fetchOrders() {
@@ -104,14 +172,27 @@ class OrdersActivity : AppCompatActivity() {
                         val notes = orderJson.getString("notes")
 
 
-
                         // Create an Order object and add it to the list
-                        orderList.add(Order(orderJson.getString("id"), customerId, products.joinToString(", "), cartId, totalPrice, shippingAddress, orderDate, status, paymentStatus, notes))
+                        orderList.add(
+                            Order(
+                                orderJson.getString("id"),
+                                customerId,
+                                products.joinToString(", "),
+                                cartId,
+                                totalPrice,
+                                shippingAddress,
+                                orderDate,
+                                status,
+                                paymentStatus,
+                                notes
+                            )
+                        )
                     }
 
                     // Set up the adapter with the fetched order list
                     withContext(Dispatchers.Main) {
-                        orderAdapter = OrderAdapter(orderList, this@OrdersActivity) // Pass the context here
+                        orderAdapter =
+                            OrderAdapter(orderList, this@OrdersActivity) // Pass the context here
                         orderRecyclerView.adapter = orderAdapter
                         Log.i("OrdersActivity fetched", "User ID found")
                     }

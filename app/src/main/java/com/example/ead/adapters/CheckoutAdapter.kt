@@ -14,10 +14,12 @@ import com.example.ead.R
 import com.example.ead.models.CartItem
 import com.squareup.picasso.Picasso
 
-class CheckoutAdapter(private val cartItems: List<CartItem>) : RecyclerView.Adapter<CheckoutAdapter.CartViewHolder>() {
+class CheckoutAdapter(private val cartItems: List<CartItem>) :
+    RecyclerView.Adapter<CheckoutAdapter.CartViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CartViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.checkout_item, parent, false)
+        val view =
+            LayoutInflater.from(parent.context).inflate(R.layout.checkout_item, parent, false)
         return CartViewHolder(view)
     }
 
@@ -39,14 +41,15 @@ class CheckoutAdapter(private val cartItems: List<CartItem>) : RecyclerView.Adap
             Log.d("Checkout Adapter", "Item clicked")
 
             // Create an Intent to start ProductDetailActivity
-            val intent = Intent(holder.itemLayout.context, ProductDetailActivity::class.java).apply {
-                putExtra("productName", item.productName)
-                putExtra("productPrice", item.price)
-                putExtra("productImageUrl", item.imagePath)
-                putExtra("productCategory", "Default")
-                putExtra("productCount", item.quantity)
+            val intent =
+                Intent(holder.itemLayout.context, ProductDetailActivity::class.java).apply {
+                    putExtra("productName", item.productName)
+                    putExtra("productPrice", item.price)
+                    putExtra("productImageUrl", item.imagePath)
+                    putExtra("productCategory", "Default")
+                    putExtra("productCount", item.quantity)
 
-            }
+                }
 
             // Start the ProductDetailActivity
             holder.itemLayout.context.startActivity(intent)

@@ -1,15 +1,20 @@
 package com.example.ead.activities
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.util.Log
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.PopupMenu
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -49,11 +54,11 @@ class CheckoutActivity : AppCompatActivity() {
     private lateinit var deliveryFeeAmountTextView: TextView
     val baseUrl = GlobalVariable.BASE_URL
     private lateinit var buttonCart: ImageButton
-    private lateinit var notesEditText : EditText
+    private lateinit var notesEditText: EditText
     private lateinit var paymentOptionsGroup: RadioGroup
     private lateinit var radioCOD: RadioButton
     private lateinit var radioVisa: RadioButton
-
+    private lateinit var buttonUser: ImageButton
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +66,9 @@ class CheckoutActivity : AppCompatActivity() {
         setContentView(R.layout.activity_checkout)
 
         buttonBack = findViewById(R.id.buttonBack)
-        buttonBack.setOnClickListener { onBackPressed() }
+        buttonBack.setOnClickListener {
+            startActivity(Intent(this, HomeFragment::class.java))
+        }
 
         cartRecyclerView = findViewById(R.id.cartRecyclerView)
         totalAmountTextView = findViewById(R.id.totalAmountTextView)
@@ -73,6 +80,12 @@ class CheckoutActivity : AppCompatActivity() {
         notesEditText = findViewById(R.id.notesEditText)
 
         buttonCart = findViewById(R.id.buttonCart)
+
+        buttonUser = findViewById(R.id.buttonUser)
+
+        buttonUser.setOnClickListener {
+            showUserOptions(buttonUser)
+        }
 
         paymentOptionsGroup = findViewById(R.id.paymentOptionsGroup)
         radioCOD = findViewById(R.id.radioCOD)
@@ -156,6 +169,45 @@ class CheckoutActivity : AppCompatActivity() {
         }
     }
 
+    private fun showUserOptions(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        val inflater: MenuInflater = popupMenu.menuInflater
+        inflater.inflate(R.menu.menu_user_options, popupMenu.menu)
+
+        popupMenu.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.menu_home -> {
+                    // Navigate to HomeFragment
+                    val intent = Intent(this, Main::class.java)
+                    startActivity(intent)
+                    true
+                }
+
+                R.id.menu_logout -> {
+                    // Clear shared preferences and logout
+                    logoutUser()
+                    true
+                }
+
+                else -> false
+            }
+        }
+        popupMenu.show()
+    }
+
+
+    // Method to clear shared preferences and log out
+    private fun logoutUser() {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.clear()  // Clears all the saved data
+        editor.apply()  // Apply changes
+
+        // Start the LoginRegisterActivity
+        val intent = Intent(this, LoginRegisterActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
 
     private fun createOrder(order: Order) {
 
@@ -165,7 +217,10 @@ class CheckoutActivity : AppCompatActivity() {
                 val jsonOrder = Gson().toJson(order)
 
 
-                val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), jsonOrder)
+                val requestBody = RequestBody.create(
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
+                    jsonOrder
+                )
 
                 val request = Request.Builder()
                     .url("$baseUrl/order/create")
@@ -186,8 +241,13 @@ class CheckoutActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@CheckoutActivity, "Order placed successfully!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@CheckoutActivity,
+                            "Order placed successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         // Optionally, navigate to a different screen or update UI
+
 
                     }
 
@@ -204,18 +264,26 @@ class CheckoutActivity : AppCompatActivity() {
                     startActivity(intent)
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@CheckoutActivity, "Failed to place order", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@CheckoutActivity,
+                            "Failed to place order",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("CheckoutActivity", "Error creating order: ${e.message}")
-                    Toast.makeText(this@CheckoutActivity, "Error creating order", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@CheckoutActivity,
+                        "Error creating order",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
 
-}
+    }
 
     // Method to update cart status
     private fun updateCartStatus(userId: String, cartId: String) {
@@ -227,8 +295,6 @@ class CheckoutActivity : AppCompatActivity() {
                     .url("$baseUrl/cart/$userId/status/$cartId")
                     .put(RequestBody.create(null, ByteArray(0)))  // Empty body
                     .build()
-
-
 
 
                 val client = OkHttpClient()
@@ -260,7 +326,8 @@ class CheckoutActivity : AppCompatActivity() {
             }
 
 
-        }}
+        }
+    }
 
     // Method to fetch cart items from the API
     private fun fetchCartItems(userId: String) {
@@ -285,13 +352,21 @@ class CheckoutActivity : AppCompatActivity() {
 
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@CheckoutActivity, "Failed to fetch cart items", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@CheckoutActivity,
+                            "Failed to fetch cart items",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("CheckoutActivity", "Error fetching cart items: ${e.message}")
-                    Toast.makeText(this@CheckoutActivity, "Error fetching cart items", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@CheckoutActivity,
+                        "Error fetching cart items",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }

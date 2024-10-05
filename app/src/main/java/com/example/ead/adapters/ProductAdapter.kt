@@ -21,14 +21,16 @@ import okhttp3.Response
 import java.io.IOException
 import kotlin.concurrent.thread
 
-class ProductAdapter(private val context: Context, private val productList: List<Product>) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
+class ProductAdapter(private val context: Context, private val productList: List<Product>) :
+    RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
 
     private val client = OkHttpClient()
     val baseUrl = GlobalVariable.BASE_URL
 
     @NonNull
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.adapter_product_item, parent, false)
+        val view =
+            LayoutInflater.from(context).inflate(R.layout.adapter_product_item, parent, false)
         return ProductViewHolder(view)
     }
 

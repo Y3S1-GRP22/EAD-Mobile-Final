@@ -46,7 +46,14 @@ class RegisterFragment : Fragment() {
             val address = binding.edAddressRegister.text.toString().trim()
 
             // Validate inputs before proceeding
-            if (viewModel.validateInputs(requireContext(), email, password, confirmPassword, mobileNumber)) {
+            if (viewModel.validateInputs(
+                    requireContext(),
+                    email,
+                    password,
+                    confirmPassword,
+                    mobileNumber
+                )
+            ) {
                 val customer = Customer(
                     fullName = fullName,
                     email = email,
@@ -62,7 +69,6 @@ class RegisterFragment : Fragment() {
                 }
             }
         }
-
 
 
     }
