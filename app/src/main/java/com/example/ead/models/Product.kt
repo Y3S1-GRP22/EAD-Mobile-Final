@@ -16,7 +16,7 @@ data class Product(
 
 ) {
     val imageUrl: String
-        get() = "http://192.168.105.81:5000$imagePath"
+        get() = "http://192.168.109.81/iCorner$imagePath"
 
 
 }
