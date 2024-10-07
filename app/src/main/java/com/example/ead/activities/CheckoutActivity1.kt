@@ -184,6 +184,13 @@ class CheckoutActivity1 : AppCompatActivity() {
                     true
                 }
 
+                R.id.menu_myprofile -> {
+                    // Navigate to the HomeFragment (main activity)
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+
                 else -> false
             }
         }

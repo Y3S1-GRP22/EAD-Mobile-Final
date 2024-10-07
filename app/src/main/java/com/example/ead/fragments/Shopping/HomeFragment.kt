@@ -23,6 +23,7 @@ import java.util.*
 
 class HomeFragment : Fragment() {
 
+    // View components
     private lateinit var productAdapter: ProductAdapter
     private lateinit var recyclerViewProducts: RecyclerView
     private lateinit var productList: MutableList<Product>
@@ -32,17 +33,26 @@ class HomeFragment : Fragment() {
     private lateinit var sortingSpinner: Spinner
     private lateinit var searchView: SearchView
 
+    /**
+     * Called to create the view hierarchy associated with the fragment.
+     *
+     * @param inflater The LayoutInflater used to inflate the fragment's view.
+     * @param container The parent view that this fragment's UI should be attached to.
+     * @param savedInstanceState A Bundle containing the activity's previously saved state, if any.
+     * @return The root view of the fragment's layout.
+     */
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
+        // Initialize view components
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
         recyclerViewProducts = view.findViewById(R.id.recyclerViewProducts)
         recyclerViewProducts.layoutManager = GridLayoutManager(context, 2)
 
-        // Initialize the product list and adapter
+        // Initialize the product lists and adapter
         productList = mutableListOf()
         filteredProductList = mutableListOf()
         productAdapter = ProductAdapter(requireContext(), filteredProductList)
@@ -53,6 +63,7 @@ class HomeFragment : Fragment() {
         sortingSpinner = view.findViewById(R.id.spinnerSort)
         searchView = view.findViewById(R.id.searchViewProducts)
 
+        // Setup spinners and search view
         setupCategorySpinner()
         setupSortingSpinner()
         setupSearchView()
@@ -68,6 +79,9 @@ class HomeFragment : Fragment() {
         return view
     }
 
+    /**
+     * Sets up the category spinner with options.
+     */
     private fun setupCategorySpinner() {
         val adapter = ArrayAdapter.createFromResource(
             requireContext(),
@@ -77,6 +91,7 @@ class HomeFragment : Fragment() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         categorySpinner.adapter = adapter
 
+        // Handle category selection
         categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>,
@@ -95,6 +110,9 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /**
+     * Sets up the sorting spinner with options.
+     */
     private fun setupSortingSpinner() {
         val adapter = ArrayAdapter.createFromResource(
             requireContext(),
@@ -104,6 +122,7 @@ class HomeFragment : Fragment() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         sortingSpinner.adapter = adapter
 
+        // Handle sorting selection
         sortingSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>,
@@ -122,6 +141,9 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /**
+     * Sets up the search view for filtering products.
+     */
     private fun setupSearchView() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -135,6 +157,11 @@ class HomeFragment : Fragment() {
         })
     }
 
+    /**
+     * Filters products based on the search query.
+     *
+     * @param query The search query entered by the user.
+     */
     private fun filterProductsBySearch(query: String?) {
         Log.d("HomeFragment", "Filtering products by search query: $query")
         filteredProductList.clear()
@@ -158,13 +185,23 @@ class HomeFragment : Fragment() {
         Log.d("HomeFragment", "Filtered product count: ${filteredProductList.size}")
     }
 
+    /**
+     * Retrieves the product rating as text from the product view holder.
+     *
+     * @param product The product whose rating text needs to be retrieved.
+     * @return The product's rating text.
+     */
     private fun getProductRatingText(product: Product): String {
-
         val productView =
             recyclerViewProducts.findViewHolderForAdapterPosition(productList.indexOf(product)) as? ProductAdapter.ProductViewHolder
         return productView?.textViewRating?.text?.toString()?.replace("Rating: ", "") ?: ""
     }
 
+    /**
+     * Filters products by the selected category.
+     *
+     * @param category The selected category to filter products.
+     */
     private fun filterProductsByCategory(category: String) {
         Log.d("HomeFragment", "Filtering products by category: $category")
         filteredProductList.clear()
@@ -182,6 +219,11 @@ class HomeFragment : Fragment() {
         Log.d("HomeFragment", "Filtered product count: ${filteredProductList.size}")
     }
 
+    /**
+     * Sorts the filtered product list based on the selected option.
+     *
+     * @param sortOption The selected sorting option.
+     */
     private fun sortProducts(sortOption: String) {
         Log.d("HomeFragment", "Sorting products by: $sortOption")
         when (sortOption) {
@@ -202,7 +244,7 @@ class HomeFragment : Fragment() {
             }
 
             "Rating: Low to High" -> {
-                filteredProductList.sortBy { it.rating }  // Assuming 'rating' is a field in your Product class
+                filteredProductList.sortBy { it.rating } // Assuming 'rating' is a field in your Product class
             }
 
             "Rating: High to Low" -> {
@@ -218,7 +260,9 @@ class HomeFragment : Fragment() {
         Log.d("HomeFragment", "Sorted product count: ${filteredProductList.size}")
     }
 
-
+    /**
+     * Loads products from the API.
+     */
     private fun loadProducts() {
         Log.d("API_CALL", "Starting API call to load products")
 
@@ -249,4 +293,3 @@ class HomeFragment : Fragment() {
         })
     }
 }
-

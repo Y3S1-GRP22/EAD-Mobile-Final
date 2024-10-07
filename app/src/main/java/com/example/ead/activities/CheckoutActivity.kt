@@ -189,6 +189,13 @@ class CheckoutActivity : AppCompatActivity() {
                     true
                 }
 
+                R.id.menu_myprofile -> {
+                    // Navigate to the HomeFragment (main activity)
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+
                 else -> false
             }
         }
@@ -372,7 +379,6 @@ class CheckoutActivity : AppCompatActivity() {
         }
     }
 
-    // Method to parse cart items from the JSON response
     // Method to parse cart items from the JSON response
     private suspend fun parseCartItems(responseBody: String) {
         try {

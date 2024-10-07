@@ -1,6 +1,5 @@
 package com.example.ead.activities
 
-
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -20,7 +19,7 @@ import com.example.ead.GlobalVariable
 import com.example.ead.R
 import com.example.ead.adapters.CartAdapter
 import com.example.ead.models.CartItem
-import com.example.ead.models.CartResponse // Create this model class
+import com.example.ead.models.CartResponse
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +41,10 @@ class CartActivity : AppCompatActivity() {
     private var cartId: String? = null
     private lateinit var buttonUser: ImageButton
 
-
+    /**
+     * Initializes the activity and sets up UI components.
+     * This method is called when the activity is created.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cart)
@@ -62,7 +64,6 @@ class CartActivity : AppCompatActivity() {
 
         updateTotalAmount()
 
-
         // Set click listeners
         buttonBack.setOnClickListener { onBackPressed() }
         clearCart.setOnClickListener {
@@ -77,7 +78,6 @@ class CartActivity : AppCompatActivity() {
             showUserOptions(buttonUser)
         }
 
-
         checkoutButton.setOnClickListener {
             // Pass cart ID and total amount to CheckoutActivity
             if (cartId != null) {
@@ -91,11 +91,14 @@ class CartActivity : AppCompatActivity() {
             }
         }
 
-
         // Fetch cart details
         fetchCartDetails()
     }
 
+    /**
+     * Displays a popup menu with user options.
+     * @param view The view where the popup menu will anchor.
+     */
     private fun showUserOptions(view: View) {
         val popupMenu = PopupMenu(this, view)
         val inflater: MenuInflater = popupMenu.menuInflater
@@ -116,14 +119,22 @@ class CartActivity : AppCompatActivity() {
                     true
                 }
 
+                R.id.menu_myprofile -> {
+                    // Navigate to the HomeFragment (main activity)
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+
                 else -> false
             }
         }
         popupMenu.show()
     }
 
-
-    // Method to clear shared preferences and log out
+    /**
+     * Clears shared preferences and logs out the user.
+     */
     private fun logoutUser() {
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
@@ -136,8 +147,9 @@ class CartActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-
-    // Method to clear cart from server
+    /**
+     * Sends a request to the server to clear the cart items.
+     */
     private fun clearCartItemsFromServer() {
         CoroutineScope(Dispatchers.IO).launch {
             val userId = getCustomerId() // Get the userId from SharedPreferences
@@ -187,14 +199,18 @@ class CartActivity : AppCompatActivity() {
         }
     }
 
-    // Method to clear cart items in the UI
+    /**
+     * Clears the cart items from the UI and updates the total amount.
+     */
     private fun clearCartItems() {
         cartItems.clear()
         cartAdapter.notifyDataSetChanged()
         updateTotalAmount()
-//        updateButton.visibility = View.GONE
     }
 
+    /**
+     * Fetches the cart details from the server.
+     */
     private fun fetchCartDetails() {
         CoroutineScope(Dispatchers.IO).launch {
             val userId = getCustomerId() // Replace with the actual cart ID
@@ -230,12 +246,18 @@ class CartActivity : AppCompatActivity() {
         }
     }
 
-
+    /**
+     * Updates the total amount displayed in the UI.
+     */
     fun updateTotalAmount() {
         val total = calculateTotal()
         totalAmountTextView.text = String.format("Total: $%.2f", total)
     }
 
+    /**
+     * Calculates the total amount for the items in the cart.
+     * @return Total amount as a Double.
+     */
     private fun calculateTotal(): Double {
         var total = 0.0
         for (item in cartItems) {
@@ -244,6 +266,9 @@ class CartActivity : AppCompatActivity() {
         return total
     }
 
+    /**
+     * Overrides the back button press to handle fragment stack.
+     */
     override fun onBackPressed() {
         super.onBackPressed()
         if (supportFragmentManager.backStackEntryCount > 0) {
@@ -253,16 +278,21 @@ class CartActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Retrieves the customer ID from shared preferences.
+     * @return Customer ID as a String, or null if not found.
+     */
     private fun getCustomerId(): String? {
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         return sharedPreferences.getString("customer_id", null)
     }
 
+    /**
+     * Recalculates and updates the total amount when the activity is resumed.
+     */
     override fun onResume() {
         super.onResume()
         // Recalculate total when the activity is resumed (e.g., after a refresh)
         updateTotalAmount()
     }
-
-
 }

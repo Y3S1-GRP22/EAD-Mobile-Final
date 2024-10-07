@@ -28,139 +28,139 @@ import java.time.format.DateTimeFormatter
 
 val baseUrl = GlobalVariable.BASE_URL
 
+// Adapter class for displaying orders in a RecyclerView
 class OrderAdapter(private var orderList: List<Order>, private val context: Context) :
     RecyclerView.Adapter<OrderAdapter.OrderViewHolder>() {
 
-    // ViewHolder class that holds the views for each list item
+    // ViewHolder class that holds references to the views for each order item
     class OrderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val orderNumberTextView: TextView = view.findViewById(R.id.orderNumberTextView)
-        val productsTextView: TextView = view.findViewById(R.id.productsTextView)
-        val totalAmountTextView: TextView = view.findViewById(R.id.totalAmountTextView)
-        val statusTextView: TextView = view.findViewById(R.id.statusTextView)
-        val editButton: ImageView = view.findViewById(R.id.editButtonOrder)
-        val deleteButton: ImageView = view.findViewById(R.id.deleteIconOrder)
-        val orderDateTextView: TextView = view.findViewById(R.id.orderDateTextView)
+        // TextViews for displaying order information
+        val orderNumberTextView: TextView = view.findViewById(R.id.orderNumberTextView) // Displays the order number
+        val productsTextView: TextView = view.findViewById(R.id.productsTextView) // Displays the list of products
+        val totalAmountTextView: TextView = view.findViewById(R.id.totalAmountTextView) // Displays the total amount of the order
+        val statusTextView: TextView = view.findViewById(R.id.statusTextView) // Displays the order status
+        val editButton: ImageView = view.findViewById(R.id.editButtonOrder) // Button to edit the order
+        val deleteButton: ImageView = view.findViewById(R.id.deleteIconOrder) // Button to delete the order
+        val orderDateTextView: TextView = view.findViewById(R.id.orderDateTextView) // Displays the order date
     }
 
     // Inflating the layout for each item in the RecyclerView
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OrderViewHolder {
+        // Inflate the order_item layout to create a ViewHolder
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.order_item, parent, false)
-        return OrderViewHolder(view)
+        return OrderViewHolder(view) // Return the ViewHolder
     }
 
     // Binding data to the ViewHolder for each item
-    @SuppressLint("ResourceAsColor")
+    @SuppressLint("ResourceAsColor") // Suppress warnings about color resources
     override fun onBindViewHolder(holder: OrderViewHolder, position: Int) {
+        // Get the order object at the current position
         val order = orderList[position]
+
+        // Set the order number text
         holder.orderNumberTextView.text = "Order # : " + order.id
+        // Set the products text
         holder.productsTextView.text = order.cart
+        // Set the total amount text
         holder.totalAmountTextView.text = "Total Amount : $" + order.totalPrice.toString()
+        // Set the order status text
         holder.statusTextView.text = "Status : " + order.status
 
-        // Parse and format order date
-        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val parsedDate = ZonedDateTime.parse(order.orderDate).format(dateFormatter)
-        holder.orderDateTextView.text = "Order Date : $parsedDate"
+        // Parse and format the order date
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd") // Date format
+        val parsedDate = ZonedDateTime.parse(order.orderDate).format(dateFormatter) // Parse and format the date
+        holder.orderDateTextView.text = "Order Date : $parsedDate" // Set the formatted date text
 
-        // Set status text color based on the status
+        // Set status text color based on the order status
         when (order.status) {
             "Processing" -> holder.statusTextView.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    R.color.g_orange_yellow
-                )
+                ContextCompat.getColor(context, R.color.g_orange_yellow) // Orange-yellow for Processing status
             )
 
             "Cancelled" -> holder.statusTextView.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    R.color.red
-                )
+                ContextCompat.getColor(context, R.color.red) // Red for Cancelled status
             )
 
             "Dispatched" -> holder.statusTextView.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    R.color.dispatched
-                )
+                ContextCompat.getColor(context, R.color.dispatched) // Color for Dispatched status
             )
 
             "Completed" -> holder.statusTextView.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    R.color.g_green
-                )
+                ContextCompat.getColor(context, R.color.g_green) // Green for Completed status
             )
 
             else -> holder.statusTextView.setTextColor(
-                ContextCompat.getColor(
-                    context,
-                    R.color.black
-                )
-            ) // Default
+                ContextCompat.getColor(context, R.color.black) // Default color for other statuses
+            )
         }
 
-        // Hide edit and delete buttons if the status is "Dispatched" or "Cancelled"
+        // Hide edit and delete buttons if the order is "Dispatched", "Cancelled", or "Completed"
         if (order.status == "Dispatched" || order.status == "Cancelled" || order.status == "Completed") {
-            holder.editButton.visibility = View.GONE
-            holder.deleteButton.visibility = View.GONE
+            holder.editButton.visibility = View.GONE // Hide edit button
+            holder.deleteButton.visibility = View.GONE // Hide delete button
         } else {
-            holder.editButton.visibility = View.VISIBLE
-            holder.deleteButton.visibility = View.VISIBLE
+            holder.editButton.visibility = View.VISIBLE // Show edit button
+            holder.deleteButton.visibility = View.VISIBLE // Show delete button
         }
 
         // Handle delete button click
         holder.deleteButton.setOnClickListener {
             order.id?.let { orderId ->
-                updateOrderStatus(orderId)
+                updateOrderStatus(orderId) // Call method to cancel the order
             }
         }
 
         // Handle edit button click
         holder.editButton.setOnClickListener {
+            // Create an Intent to start the CartActivity1 for editing the order
             val intent = Intent(context, CartActivity1::class.java)
-            intent.putExtra("cartId", order.vendorId)
-            intent.putExtra("orderId", order.id)
-            context.startActivity(intent)
+            intent.putExtra("cartId", order.vendorId) // Pass vendor ID
+            intent.putExtra("orderId", order.id) // Pass order ID
+            context.startActivity(intent) // Start the activity
         }
     }
 
-    // Return the total number of items
+    // Return the total number of orders
     override fun getItemCount(): Int {
         return orderList.size
     }
 
+    // Method to update the order status (e.g., cancel the order)
     private fun updateOrderStatus(orderId: String) {
         // Coroutine for performing the network request on a background thread
         CoroutineScope(Dispatchers.IO).launch {
+            // Define the URL for the API call to cancel the order
             val url = "$baseUrl/order/cancel/$orderId"
-            val client = OkHttpClient()
+            val client = OkHttpClient() // Create an OkHttpClient instance
             val request = Request.Builder()
-                .url(url)
-                .put(RequestBody.create(null, ByteArray(0)))  // Empty body
+                .url(url) // Set the URL for the request
+                .put(RequestBody.create(null, ByteArray(0))) // Send an empty body with a PUT request
                 .build()
 
+            // Execute the request
             val response = client.newCall(request).execute()
 
+            // Check if the response is successful
             if (response.isSuccessful) {
-                withContext(Dispatchers.Main) {
+                withContext(Dispatchers.Main) { // Switch to the main thread for UI updates
                     Toast.makeText(context, "Order cancelled successfully", Toast.LENGTH_SHORT)
-                        .show()
-                    updateOrderList(orderList)
-                    val refresh = Intent(context, OrdersActivity::class.java)
-                    context.startActivity(refresh) // Pass the context explicitly
+                        .show() // Show success message
+                    updateOrderList(orderList) // Update the order list
+                    val refresh = Intent(context, OrdersActivity::class.java) // Create intent to refresh OrdersActivity
+                    context.startActivity(refresh) // Start the activity
                 }
             } else {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Failed to cancel order", Toast.LENGTH_SHORT).show()
+                withContext(Dispatchers.Main) { // Switch to the main thread for UI updates
+                    Toast.makeText(context, "Failed to cancel order", Toast.LENGTH_SHORT).show() // Show failure message
                 }
             }
         }
     }
 
+    // Method to update the order list and refresh the RecyclerView
     fun updateOrderList(newOrderList: List<Order>) {
-        orderList = newOrderList
-        notifyDataSetChanged()
+        orderList = newOrderList // Update the order list
+        notifyDataSetChanged() // Notify the RecyclerView to refresh
     }
 }

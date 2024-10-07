@@ -27,52 +27,63 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 
 
+// Adapter class for managing the cart items in the RecyclerView
 class CartAdapter1(
-    private var cartItems: MutableList<CartItem>,
-    private val context: Context,
-    private val activity: CartActivity1// Add this line
+    private var cartItems: MutableList<CartItem>,  // List of items in the cart
+    private val context: Context,                   // Context for accessing resources
+    private val activity: CartActivity1              // Reference to the activity managing the cart
 ) : RecyclerView.Adapter<CartAdapter1.CartViewHolder>() {
 
+    // Base URL for making network requests
     val baseUrl = GlobalVariable.BASE_URL
 
-
+    // Called when RecyclerView needs a new ViewHolder of the given type to represent an item
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CartViewHolder {
+        // Inflate the cart_item layout and create a ViewHolder
         val view = LayoutInflater.from(parent.context).inflate(R.layout.cart_item, parent, false)
         return CartViewHolder(view)
     }
 
+    // Called by RecyclerView to display the data at the specified position
     override fun onBindViewHolder(holder: CartViewHolder, position: Int) {
+        // Get the item at the current position
         val item = cartItems[position]
+
+        // Set item details to the respective TextViews
         holder.itemNameTextView.text = item.productName
         holder.itemPriceTextView.text = String.format("Price: $%.2f", item.price)
         holder.itemCountTextView.text = item.quantity.toString()
         holder.itemCountChangeTextView.text = item.quantity.toString()
 
-        // Load image using Picasso
-        Picasso.get().load(item.imagePath).placeholder(R.drawable.logo_dark)
-            .error(R.drawable.logo_dark).into(holder.itemImageView)
+        // Load item image using Picasso library
+        Picasso.get()
+            .load(item.imagePath)
+            .placeholder(R.drawable.logo_dark) // Placeholder image while loading
+            .error(R.drawable.logo_dark) // Image to show if loading fails
+            .into(holder.itemImageView)
 
-        // Set click listeners for the + and - buttons
+        // Set click listener for the '+' button to increase item quantity
         holder.plusButton.setOnClickListener {
-            item.quantity += 1
-            holder.itemCountChangeTextView.text = item.quantity.toString()
-
+            item.quantity += 1  // Increment the quantity
+            holder.itemCountChangeTextView.text = item.quantity.toString()  // Update display
         }
-        var cartId = activity.cartId
-        println("cart activity 1" + cartId)
 
+        // Set click listener for the '-' button to decrease item quantity
         holder.minusButton.setOnClickListener {
-            if (item.quantity > 0) {
-                item.quantity -= 1
-                holder.itemCountChangeTextView.text = item.quantity.toString()
+            if (item.quantity > 0) { // Only allow decrement if quantity is greater than 0
+                item.quantity -= 1  // Decrement the quantity
+                holder.itemCountChangeTextView.text = item.quantity.toString() // Update display
             }
         }
 
+        // Set click listener for the edit button to update item quantity
         holder.editButton.setOnClickListener {
-            val updatedQuantity = holder.itemCountChangeTextView.text.toString().toInt()
+            val updatedQuantity = holder.itemCountChangeTextView.text.toString().toInt() // Get new quantity
+            // Get user ID from SharedPreferences
             val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
             val userId = sharedPreferences.getString("customer_id", null)
 
+            // Update item quantity if user ID is found
             if (userId != null) {
                 updateCartItemQuantity(userId, item.id, updatedQuantity)
             } else {
@@ -80,8 +91,7 @@ class CartAdapter1(
             }
         }
 
-
-        // Set up delete button
+        // Set up delete button to remove item from cart
         holder.deleteButton.setOnClickListener {
             // Retrieve userId from SharedPreferences
             val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
@@ -94,52 +104,52 @@ class CartAdapter1(
                 Toast.makeText(context, "User ID not found", Toast.LENGTH_SHORT).show()
             }
         }
-
-
     }
 
+    // Function to update the item quantity in the cart
     private fun updateCartItemQuantity(userId: String, itemId: String?, quantity: Int) {
+        // Validate itemId and quantity
         if (itemId == null || quantity <= 0) {
             Toast.makeText(context, "Invalid item ID or quantity", Toast.LENGTH_SHORT).show()
             return
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            var cartId = activity.cartId
-            val url = "$baseUrl/cart/$cartId/item/$itemId"
-            val client = OkHttpClient()
+            // Get cart ID from activity
+            val cartId = activity.cartId
+            val url = "$baseUrl/cart/$cartId/item/$itemId" // Build URL for updating the item
+            val client = OkHttpClient() // Create HTTP client
             val requestBody = okhttp3.RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
                 quantity.toString() // Sending quantity as plain text in the request body
             )
-            val request = Request.Builder().url(url).put(requestBody).build()
+            val request = Request.Builder()
+                .url(url)
+                .put(requestBody) // Specify PUT request for updating
+                .build()
 
             try {
-                val response = client.newCall(request).execute()
+                val response = client.newCall(request).execute() // Execute network call
                 if (response.isSuccessful) {
+                    // Update UI on the main thread after successful update
                     withContext(Dispatchers.Main) {
                         // Find the updated item and refresh it in the RecyclerView
                         val position = cartItems.indexOfFirst { it.id == itemId }
                         if (position != -1) {
-                            cartItems[position].quantity = quantity
-                            notifyItemChanged(position)
-
+                            cartItems[position].quantity = quantity // Update quantity in the list
+                            notifyItemChanged(position) // Notify adapter of the change
                         }
-                        activity.updateTotalAmount()
-                        Toast.makeText(
-                            context, "Item quantity updated successfully", Toast.LENGTH_SHORT
-                        ).show()
+                        activity.updateTotalAmount() // Update total amount in activity
+                        Toast.makeText(context, "Item quantity updated successfully", Toast.LENGTH_SHORT).show()
                     }
                 } else {
+                    // Handle failed response
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            context,
-                            "Failed to update item: ${response.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, "Failed to update item: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
+                // Handle any errors during the update
                 withContext(Dispatchers.Main) {
                     Log.e("CartAdapter", "Error updating item: ${e.message}")
                     Toast.makeText(context, "Error updating item", Toast.LENGTH_SHORT).show()
@@ -148,14 +158,14 @@ class CartAdapter1(
         }
     }
 
-
+    // Return the total number of items in the cart
     override fun getItemCount(): Int {
         return cartItems.size
     }
 
     // Method to delete an item from the cart
     private fun deleteCartItem(userId: String, itemId: String?, position: Int) {
-        var cartId = activity.cartId
+        val cartId = activity.cartId // Get cart ID from activity
         if (itemId == null) {
             Toast.makeText(context, "Invalid item ID", Toast.LENGTH_SHORT).show()
             return
@@ -163,37 +173,33 @@ class CartAdapter1(
 
         // Coroutine for performing the network request on a background thread
         CoroutineScope(Dispatchers.IO).launch {
-            val url = "$baseUrl/cart/$cartId/item/$itemId"
-            val client = OkHttpClient()
-            val request = Request.Builder().url(url).delete() // HTTP DELETE request
+            val url = "$baseUrl/cart/$cartId/item/$itemId" // Build URL for deleting the item
+            val client = OkHttpClient() // Create HTTP client
+            val request = Request.Builder()
+                .url(url)
+                .delete() // HTTP DELETE request
                 .build()
 
             try {
-                val response = client.newCall(request).execute()
+                val response = client.newCall(request).execute() // Execute network call
                 if (response.isSuccessful) {
                     // Update the UI on the main thread after successful deletion
                     withContext(Dispatchers.Main) {
-                        // Remove the item from the cart list and notify the adapter
-                        cartItems.removeAt(position)
-                        notifyItemRemoved(position)
-                        notifyItemRangeChanged(position, cartItems.size)
+                        cartItems.removeAt(position) // Remove item from list
+                        notifyItemRemoved(position) // Notify adapter of the item removal
+                        notifyItemRangeChanged(position, cartItems.size) // Update the range in adapter
 
-                        activity.updateTotalAmount()
-
-
-                        Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT)
-                            .show()
+                        activity.updateTotalAmount() // Update total amount in activity
+                        Toast.makeText(context, "Item deleted successfully", Toast.LENGTH_SHORT).show()
                     }
                 } else {
+                    // Handle failed response
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            context,
-                            "Failed to delete item: ${response.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(context, "Failed to delete item: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
+                // Handle any errors during deletion
                 withContext(Dispatchers.Main) {
                     Log.e("CartAdapter", "Error deleting item: ${e.message}")
                     Toast.makeText(context, "Error deleting item", Toast.LENGTH_SHORT).show()
@@ -202,19 +208,17 @@ class CartAdapter1(
         }
     }
 
-
+    // ViewHolder class for holding item views
     class CartViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val itemNameTextView: TextView = itemView.findViewById(R.id.itemNameTextView)
-        val itemPriceTextView: TextView = itemView.findViewById(R.id.itemPriceTextView)
-        val itemCountTextView: TextView = itemView.findViewById(R.id.itemCountTextView)
-        val itemCountChangeTextView: TextView = itemView.findViewById(R.id.itemCountChangeTextView)
-        val itemImageView: ImageView = itemView.findViewById(R.id.itemImageView)
-        val plusButton: Button = itemView.findViewById(R.id.plusButton)
-        val minusButton: Button = itemView.findViewById(R.id.minusButton)
-        val itemLayout: LinearLayout = itemView.findViewById(R.id.itemLayout)
-        val deleteButton: ImageView = itemView.findViewById(R.id.deleteIcon)
-        val editButton: ImageView = itemView.findViewById(R.id.editButton)
+        val itemNameTextView: TextView = itemView.findViewById(R.id.itemNameTextView) // TextView for item name
+        val itemPriceTextView: TextView = itemView.findViewById(R.id.itemPriceTextView) // TextView for item price
+        val itemCountTextView: TextView = itemView.findViewById(R.id.itemCountTextView) // TextView for showing item count
+        val itemCountChangeTextView: TextView = itemView.findViewById(R.id.itemCountChangeTextView) // TextView for changing item count
+        val itemImageView: ImageView = itemView.findViewById(R.id.itemImageView) // ImageView for displaying item image
+        val plusButton: Button = itemView.findViewById(R.id.plusButton) // Button for increasing item count
+        val minusButton: Button = itemView.findViewById(R.id.minusButton) // Button for decreasing item count
+        val itemLayout: LinearLayout = itemView.findViewById(R.id.itemLayout) // Layout for the item
+        val deleteButton: ImageView = itemView.findViewById(R.id.deleteIcon) // Icon for deleting item
+        val editButton: ImageView = itemView.findViewById(R.id.editButton) // Icon for editing item
     }
-
-
 }

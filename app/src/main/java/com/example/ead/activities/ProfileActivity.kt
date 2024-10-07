@@ -41,6 +41,7 @@ import retrofit2.Response
 
 class ProfileActivity : AppCompatActivity() {
 
+    // UI elements
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var loadingProgressBar: ProgressBar
     private lateinit var toolbarLayout: RelativeLayout
@@ -66,14 +67,17 @@ class ProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profile)
 
+        // Initialize buttons
         buttonBack = findViewById(R.id.buttonBack)
         clickcartHome = findViewById(R.id.clickcartHome)
         buttonCart = findViewById(R.id.buttonCart)
 
+        // Set up click listener for the cart button
         buttonCart.setOnClickListener {
             startActivity(Intent(this, CartActivity::class.java))
         }
 
+        // Initialize delete account button
         btnCusDelete = findViewById(R.id.btnCusDelete)
 
         // Handle delete button click
@@ -81,54 +85,57 @@ class ProfileActivity : AppCompatActivity() {
             deleteUserAccount()
         }
 
+        // Initialize user options button
         buttonUser = findViewById(R.id.buttonUser)
 
+        // Show user options menu on button click
         buttonUser.setOnClickListener {
             showUserOptions(buttonUser)
         }
 
+        // Handle back button press
         buttonBack.setOnClickListener { onBackPressed() }
 
+        // Initialize SwipeRefreshLayout and other UI elements
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
         loadingProgressBar = findViewById(R.id.loadingAccManProgressBar)
         toolbarLayout = findViewById(R.id.cusAccManagementHeading)
         constraintLayout = findViewById(R.id.commonHomeConstraint1)
 
+        // Set refresh listener for SwipeRefreshLayout
         swipeRefreshLayout.setOnRefreshListener { refreshContent() }
 
-//        profileEditImage = findViewById(R.id.profileEditImage)
+        // Initialize profile image view and edit texts
         cusAccountProfileImage = findViewById(R.id.cusAccountProfileImage)
-
         editTextFullName = findViewById(R.id.editTextFullName2)
         editTextEmail = findViewById(R.id.viewInputEmail2)
         editTextPhoneNo = findViewById(R.id.viewInputPhoneNo2)
         cusAccountAddress1 = findViewById(R.id.cusAccountAddress2)
 
+        // Open full-screen image activity when profile image is clicked
         cusAccountProfileImage.setOnClickListener {
             val fullScreenIntent = Intent(this, FullScreenImageActivity::class.java)
             fullScreenIntent.putExtra("productImage", selectedImageUri)
             startActivity(fullScreenIntent)
         }
 
+        // Initialize update button
         btnCusUpdate = findViewById(R.id.btnCusUpdate)
 
-
+        // Update user details when the update button is clicked
         btnCusUpdate.setOnClickListener {
             updateUserDetails()
         }
 
-        // In your Activity or Fragment
-        val editText = findViewById<EditText>(R.id.viewInputEmail2)
-        editText.setOnClickListener {
-            // Show dialog with the full text
-            val fullText = editText.text.toString()
+        // Display full email in a dialog on click
+        editTextEmail.setOnClickListener {
+            val fullText = editTextEmail.text.toString()
             AlertDialog.Builder(this)
                 .setTitle("Email")
                 .setMessage(fullText)
                 .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                 .show()
         }
-
 
         // Retrieve user details from SharedPreferences
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
@@ -144,6 +151,7 @@ class ProfileActivity : AppCompatActivity() {
         cusAccountAddress1.setText(customerAddress)
     }
 
+    // Method to display user options in a popup menu
     private fun showUserOptions(view: View) {
         val popupMenu = PopupMenu(this, view)
         val inflater: MenuInflater = popupMenu.menuInflater
@@ -164,14 +172,20 @@ class ProfileActivity : AppCompatActivity() {
                     true
                 }
 
+                R.id.menu_myprofile -> {
+                    // Navigate to the HomeFragment (main activity)
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+
                 else -> false
             }
         }
-        popupMenu.show()
+        popupMenu.show() // Show the popup menu
     }
 
-
-    // Method to clear shared preferences and log out
+    // Method to clear shared preferences and log out the user
     private fun logoutUser() {
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
@@ -184,20 +198,22 @@ class ProfileActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    // Method to delete the user account
     private fun deleteUserAccount() {
         // Get user email from shared preferences
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val customerEmail = sharedPreferences.getString("customer_email", "")
 
+        // Check if the email is valid
         if (customerEmail.isNullOrEmpty()) {
             Toast.makeText(this, "Error: No email found", Toast.LENGTH_SHORT).show()
             return
         }
 
-
         // Call the API using Retrofit
         val call = RetrofitInstance.Customerapi.deactivateCustomer(customerEmail)
 
+        // Handle the API response
         call.enqueue(object : Callback<CustomerDeleteResponse> {
             override fun onResponse(
                 call: Call<CustomerDeleteResponse>,
@@ -214,7 +230,7 @@ class ProfileActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
 
-                        // Optionally, you can log the user out or navigate them to the login screen
+                        // Navigate to the login screen after account deletion
                         val intent = Intent(this@ProfileActivity, LoginRegisterActivity::class.java)
                         startActivity(intent)
                         finish() // Close the ProfileActivity
@@ -234,21 +250,21 @@ class ProfileActivity : AppCompatActivity() {
                 }
             }
 
-
             override fun onFailure(call: Call<CustomerDeleteResponse>, t: Throwable) {
+                // Handle failure
                 Toast.makeText(this@ProfileActivity, "Error: ${t.message}", Toast.LENGTH_SHORT)
                     .show()
             }
         })
     }
 
-
+    // Method to update user details
     private fun updateUserDetails() {
         // Get values from EditTexts
         val fullName = editTextFullName.text.toString()
         val email = editTextEmail.text.toString()
         val phoneNoString = editTextPhoneNo.text.toString()
-        val phoneNo: Int? = phoneNoString.toIntOrNull()
+        val phoneNo: Int? = phoneNoString.toIntOrNull() // Convert phone number string to Int
         val address = cusAccountAddress1.text.toString()
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val password = sharedPreferences.getString("customer_password", "")
@@ -256,13 +272,13 @@ class ProfileActivity : AppCompatActivity() {
 
         // Check for validation if required (e.g. non-empty fields)
         val updateRequest = Customer(fullName, email, password, phoneNo, address)
-        Log.d("update request", updateRequest.toString())
+        Log.d("update request", updateRequest.toString()) // Log update request
 
+        // Make API call to update customer details
         val call = RetrofitInstance.Customerapi.updateCustomer(userId, updateRequest)
-        Log.d("updated call", call.toString())
+        Log.d("updated call", call.toString()) // Log updated call
 
-
-
+        // Execute API call
         if (call != null) {
             call.enqueue(object : Callback<CustomerUpdateResponse> {
                 override fun onResponse(
@@ -274,10 +290,7 @@ class ProfileActivity : AppCompatActivity() {
                         val updatedCustomer = response.body()
 
                         if (updatedCustomer != null) {
-                            // Show success message
-
-                            val sharedPreferences =
-                                getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+                            // Show success message and save updated details to SharedPreferences
                             val editor = sharedPreferences.edit()
                             editor.putString("customer_name", updatedCustomer.fullName)
                             editor.putString("customer_email", updatedCustomer.email)
@@ -299,9 +312,6 @@ class ProfileActivity : AppCompatActivity() {
 
                             // Log success
                             Log.d("ProfileUpdate", "Update Successful: $updatedCustomer")
-
-                            // Save updated details to SharedPreferences
-
                         }
                     } else {
                         // Handle failure
@@ -327,16 +337,16 @@ class ProfileActivity : AppCompatActivity() {
                     Log.e("ProfileUpdate", "Error: ${t.message}")
                 }
             })
-
-
         }
     }
 
+    // Method to refresh the content of the activity
     private fun refreshContent() {
         loadingProgressBar.visibility = View.VISIBLE
         swipeRefreshLayout.isRefreshing = false
     }
 
+    // Method to toggle edit mode for profile information
     private fun toggleEditMode() {
         toggleViewVisibility(profileEditImage)
         toggleViewVisibility(cusAccountButtons)
@@ -345,17 +355,15 @@ class ProfileActivity : AppCompatActivity() {
         toggleViewPair(editTextFullName, findViewById<TextView>(R.id.editTextFullName2))
         toggleViewPair(editTextEmail, findViewById<TextView>(R.id.viewInputEmail2))
         toggleViewPair(editTextPhoneNo, findViewById<TextView>(R.id.viewInputPhoneNo2))
-
-
-
         toggleViewPair(cusAccountAddress1, findViewById<TextView>(R.id.cusAccountAddress2))
-
     }
 
+    // Method to toggle the visibility of a view
     private fun toggleViewVisibility(view: View) {
         view.visibility = if (view.visibility == View.GONE) View.VISIBLE else View.GONE
     }
 
+    // Method to toggle visibility between edit and display views
     private fun toggleViewPair(editView: View, displayView: View) {
         if (editView.visibility == View.GONE) {
             editView.visibility = View.VISIBLE
@@ -366,6 +374,7 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
+    // Override back pressed action
     override fun onBackPressed() {
         Log.d("TAG", "Debug message")
         if (supportFragmentManager.backStackEntryCount > 0) {
@@ -376,6 +385,4 @@ class ProfileActivity : AppCompatActivity() {
             super.onBackPressed() // Close activity if no fragments are in the stack
         }
     }
-
-
 }
