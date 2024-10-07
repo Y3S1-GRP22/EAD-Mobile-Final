@@ -40,7 +40,11 @@ class ProductAdapter(private val context: Context, private val productList: List
 
         holder.textViewName.text = product.name
         holder.textViewPrice.text = String.format("$%.2f", product.price)
-        holder.textViewVendor.text = product.vendorId
+// Extract the part before the "@" in the vendorId email
+        val vendorName = product.vendorId.substringBefore("@")
+
+// Set the extracted part to the TextView
+        holder.textViewVendor.text = vendorName
 
         // Load the product image
         Log.d("ProductAdapter", "Loading image: ${product.imageUrl}")
@@ -56,7 +60,7 @@ class ProductAdapter(private val context: Context, private val productList: List
                 putExtra("productPrice", product.price.toDouble())
                 putExtra("productImageUrl", product.imageUrl)
                 putExtra("productCategory", product.categoryName)
-                putExtra("vendorName", product.vendorId)
+                putExtra("vendorName", vendorName)
                 putExtra("description", product.description)
                 putExtra("productId", product.id)
             }
@@ -87,6 +91,10 @@ class ProductAdapter(private val context: Context, private val productList: List
                 val response: Response = client.newCall(request).execute()
                 if (response.isSuccessful) {
                     val rating = response.body?.string()?.toDouble()
+
+                    // Update the product's rating
+                    productList[holder.adapterPosition].rating = rating
+
                     // Update UI on the main thread
                     (context as? androidx.appcompat.app.AppCompatActivity)?.runOnUiThread {
                         holder.textViewRating.text = ("Rating: " + (rating?.toString() ?: "N/A"))
@@ -106,7 +114,9 @@ class ProductAdapter(private val context: Context, private val productList: List
                 }
             }
         }
-    }
+
+
+}
 
 
 }

@@ -21,6 +21,8 @@
         <item>Z-A</item>
         <item>Price: Low to High</item>
         <item>Price: High to Low</item>
+        <item>Rating: Low to High</item>
+        <item>Rating: High to Low</item>
     </string-array>
 
     <string-array name="order_status">

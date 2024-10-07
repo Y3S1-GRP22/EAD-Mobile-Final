@@ -102,7 +102,7 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
         }
 
         // Hide edit and delete buttons if the status is "Dispatched" or "Cancelled"
-        if (order.status == "Dispatched" || order.status == "Cancelled") {
+        if (order.status == "Dispatched" || order.status == "Cancelled" || order.status == "Completed") {
             holder.editButton.visibility = View.GONE
             holder.deleteButton.visibility = View.GONE
         } else {

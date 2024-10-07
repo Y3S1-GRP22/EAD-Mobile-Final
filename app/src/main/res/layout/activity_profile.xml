@@ -352,7 +352,7 @@
                                         android:singleLine="true"
                                         android:background="@color/g_red"
                                         android:textColor="@color/white"
-                                        android:text="Delete"
+                                        android:text="Deactivate"
 
                                         android:textAllCaps="false" />
                                     </LinearLayout>

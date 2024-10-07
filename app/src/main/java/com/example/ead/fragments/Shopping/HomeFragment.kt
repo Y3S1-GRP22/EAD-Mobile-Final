@@ -201,8 +201,15 @@ class HomeFragment : Fragment() {
                 filteredProductList.sortByDescending { it.price }
             }
 
+            "Rating: Low to High" -> {
+                filteredProductList.sortBy { it.rating }  // Assuming 'rating' is a field in your Product class
+            }
+
+            "Rating: High to Low" -> {
+                filteredProductList.sortByDescending { it.rating }
+            }
+
             "Default" -> {
-                // If you want to reset to the original order, you'll need to maintain the original list
                 filteredProductList.clear()
                 filteredProductList.addAll(productList)
             }
@@ -210,6 +217,7 @@ class HomeFragment : Fragment() {
         productAdapter.notifyDataSetChanged()
         Log.d("HomeFragment", "Sorted product count: ${filteredProductList.size}")
     }
+
 
     private fun loadProducts() {
         Log.d("API_CALL", "Starting API call to load products")

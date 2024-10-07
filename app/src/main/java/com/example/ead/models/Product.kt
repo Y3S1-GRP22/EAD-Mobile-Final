@@ -13,6 +13,7 @@ data class Product(
     val categoryName: String,
     val stockQuantity: Int,
     val imagePath: String,
+    var rating: Double?
 
 ) {
     val imageUrl: String

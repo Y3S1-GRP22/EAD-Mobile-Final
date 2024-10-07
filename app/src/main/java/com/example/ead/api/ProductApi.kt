@@ -5,6 +5,6 @@ import retrofit2.Call
 import retrofit2.http.GET
 
 interface ProductApi {
-    @GET("products")
+    @GET("products/available")
     fun getProducts(): Call<List<Product>>
 }

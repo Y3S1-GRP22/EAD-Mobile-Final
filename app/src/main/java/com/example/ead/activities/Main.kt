@@ -165,8 +165,6 @@ class Main : AppCompatActivity() {
                 }
 
                 R.id.menu_logout -> {
-                    println("Going to logout")
-
                     logoutUser()
                     true
                 }
