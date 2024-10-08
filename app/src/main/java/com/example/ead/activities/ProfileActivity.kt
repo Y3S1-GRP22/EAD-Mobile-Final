@@ -81,9 +81,24 @@ class ProfileActivity : AppCompatActivity() {
         btnCusDelete = findViewById(R.id.btnCusDelete)
 
         // Handle delete button click
+        // Handle delete button click
         btnCusDelete.setOnClickListener {
-            deleteUserAccount()
+            // Show a confirmation dialog before proceeding with account deletion
+            AlertDialog.Builder(this)
+                .setTitle("Confirm Deactivation")
+                .setMessage("Are you sure you want to deactivate your account?")
+                .setPositiveButton("OK") { dialog, _ ->
+                    // Proceed with account deletion when OK is pressed
+                    deleteUserAccount()
+                    dialog.dismiss() // Close the dialog
+                }
+                .setNegativeButton("Cancel") { dialog, _ ->
+                    // Do nothing if "Cancel" is pressed
+                    dialog.dismiss() // Close the dialog
+                }
+                .show() // Display the alert dialog
         }
+
 
         // Initialize user options button
         buttonUser = findViewById(R.id.buttonUser)
@@ -226,7 +241,7 @@ class ProfileActivity : AppCompatActivity() {
                         // Show success message and redirect or update UI
                         Toast.makeText(
                             this@ProfileActivity,
-                            "Account deleted successfully.",
+                            "Account deactivated successfully.",
                             Toast.LENGTH_SHORT
                         ).show()
 

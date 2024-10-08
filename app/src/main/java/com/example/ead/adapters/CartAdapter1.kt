@@ -92,18 +92,36 @@ class CartAdapter1(
         }
 
         // Set up delete button to remove item from cart
+        // Set up delete button click listener
         holder.deleteButton.setOnClickListener {
-            // Retrieve userId from SharedPreferences
-            val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-            val userId = sharedPreferences.getString("customer_id", null)
+            // Create an AlertDialog to confirm deletion
+            val builder = android.app.AlertDialog.Builder(context)
+            builder.setTitle("Delete Item")
+            builder.setMessage("Are you sure you want to delete this item from the cart?")
 
-            // Only proceed if userId is available
-            if (userId != null) {
-                deleteCartItem(userId, item.id, position)
-            } else {
-                Toast.makeText(context, "User ID not found", Toast.LENGTH_SHORT).show()
+            // Set up the buttons
+            builder.setPositiveButton("Yes") { dialog, which ->
+                // Retrieve user ID from SharedPreferences
+                val sharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+                val userId = sharedPreferences.getString("customer_id", null)
+
+                // Only proceed if user ID is available
+                if (userId != null) {
+                    deleteCartItem(userId, item.id, position) // Delete the cart item via API
+                } else {
+                    Toast.makeText(context, "User ID not found", Toast.LENGTH_SHORT).show() // Show error if user ID is missing
+                }
             }
+
+            builder.setNegativeButton("No") { dialog, which ->
+                // Do nothing, just dismiss the dialog
+                dialog.dismiss()
+            }
+
+            // Display the dialog
+            builder.show()
         }
+
     }
 
     // Function to update the item quantity in the cart

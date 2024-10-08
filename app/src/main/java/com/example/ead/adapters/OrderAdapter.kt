@@ -105,11 +105,30 @@ class OrderAdapter(private var orderList: List<Order>, private val context: Cont
         }
 
         // Handle delete button click
+        // Handle delete button click with a confirmation alert
         holder.deleteButton.setOnClickListener {
-            order.id?.let { orderId ->
-                updateOrderStatus(orderId) // Call method to cancel the order
+            // Create an AlertDialog to confirm deletion
+            val builder = android.app.AlertDialog.Builder(context)
+            builder.setTitle("Cancel Order")
+            builder.setMessage("Are you sure you want to cancel this order?")
+
+            // Set up the buttons
+            builder.setPositiveButton("Yes") { dialog, which ->
+                // Proceed with the order cancellation if user confirms
+                order.id?.let { orderId ->
+                    updateOrderStatus(orderId) // Call method to cancel the order
+                }
             }
+
+            builder.setNegativeButton("No") { dialog, which ->
+                // Do nothing, just dismiss the dialog
+                dialog.dismiss()
+            }
+
+            // Display the dialog
+            builder.show()
         }
+
 
         // Handle edit button click
         holder.editButton.setOnClickListener {

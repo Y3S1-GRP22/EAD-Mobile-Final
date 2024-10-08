@@ -1,8 +1,6 @@
 package com.example.ead.util
 
 import com.example.ead.GlobalVariable
-import com.example.ead.api.CartApi
-import com.example.ead.api.CommentApi
 import com.example.ead.api.CustomerApi
 import com.example.ead.api.ProductApi
 import okhttp3.OkHttpClient
@@ -42,14 +40,5 @@ object RetrofitInstance {
             .create(ProductApi::class.java) // Create the ProductApi interface instance
     }
 
-    // Lazy initialization of CartApi Retrofit instance using the custom OkHttpClient
-    val Cartapi: CartApi by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL) // Set the base URL for the API
-            .client(client) // Use the custom OkHttpClient with logging interceptor
-            .addConverterFactory(GsonConverterFactory.create()) // Use Gson for JSON conversion
-            .build() // Build the Retrofit instance
-            .create(CartApi::class.java) // Create the CartApi interface instance
-    }
 
 }
