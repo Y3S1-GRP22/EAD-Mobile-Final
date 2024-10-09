@@ -164,7 +164,10 @@ class OrdersActivity : AppCompatActivity() {
                     // Construct the URL to fetch orders for the user
                     val ordersUrl = "$baseUrl/order/customer/$userId"
                     val ordersResponse = makeGetRequest(ordersUrl) // Fetch data using GET request
+                    Log.i("oredr response", ordersResponse.toString())
                     val ordersJsonArray = JSONArray(ordersResponse)
+
+                    Log.i("oredr array", ordersJsonArray.toString())
 
                     // Loop through each order in the response and create Order objects
                     for (i in 0 until ordersJsonArray.length()) {
@@ -175,7 +178,6 @@ class OrdersActivity : AppCompatActivity() {
                         val products = fetchCartItems(cartId) // Fetch product names for the cart
                         val shippingAddress = orderJson.getString("shippingAddress")
                         val customerId = orderJson.getString("customerId")
-                        val vendorId = orderJson.getString("vendorId")
                         val orderDate = orderJson.getString("orderDate")
                         val paymentStatus = orderJson.getString("paymentStatus")
                         val notes = orderJson.getString("notes")
@@ -196,6 +198,8 @@ class OrdersActivity : AppCompatActivity() {
                             )
                         )
                     }
+
+                    Log.i("oredr LIST", orderList.toString())
 
                     // Update the RecyclerView with the fetched order list on the main thread
                     withContext(Dispatchers.Main) {

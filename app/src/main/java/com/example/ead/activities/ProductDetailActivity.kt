@@ -123,7 +123,7 @@ class ProductDetailActivity : AppCompatActivity() {
             var id = null
 
             // Create CartItem object
-            val cartItem = CartItem(id, productId, productName, quantity, price, imagePath)
+            val cartItem = CartItem(id, productId, productName, quantity, price, imagePath,"Pending")
 
             // Call Retrofit to add item to cart
             addToCart(userId, cartItem)
@@ -347,6 +347,7 @@ class ProductDetailActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = addItemToCart(userId, cartItem)
+                Log.e("cart response", response.toString())
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         navigateToCartActivity()

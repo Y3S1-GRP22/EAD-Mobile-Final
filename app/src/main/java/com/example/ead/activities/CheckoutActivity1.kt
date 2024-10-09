@@ -342,7 +342,7 @@ class CheckoutActivity1 : AppCompatActivity() {
                 val imageUrl = itemObject.getString("imagePath") // Full URL for the image
 
                 // Create a new CartItem object
-                val cartItem = CartItem(id, productId, productName, quantity, price, imageUrl)
+                val cartItem = CartItem(id, productId, productName, quantity, price, imageUrl,"Pending")
                 cartItems.add(cartItem) // Add the item to the list
             }
 
